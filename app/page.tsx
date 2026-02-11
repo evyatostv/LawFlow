@@ -11,7 +11,7 @@ export default function HomePage() {
         <p className="text-sm text-steel/70">סקירה של היום במשרד</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader>
             <CardTitle>דיונים היום</CardTitle>
@@ -67,7 +67,7 @@ export default function HomePage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <Card>
           <SectionHeader title="פעילות לקוחות אחרונה" action={{ label: "כל הפעילות" }} />
           <div className="space-y-3">

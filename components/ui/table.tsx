@@ -3,7 +3,14 @@ import clsx from "clsx";
 
 export function Table({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) {
   return (
-    <table className={clsx("w-full text-right text-sm", className)} {...props} />
+    <table
+      className={clsx(
+        "w-full text-right text-sm",
+        "min-w-[720px] lg:min-w-0",
+        className
+      )}
+      {...props}
+    />
   );
 }
 

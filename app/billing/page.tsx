@@ -50,7 +50,7 @@ const columns: ColumnDef<Invoice>[] = [
 export default function BillingPage() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-ink">תשלומים וחיובים</h2>
           <p className="text-sm text-steel/70">מעקב אחר תשלומים, הפקת חשבוניות וקבלות</p>
@@ -61,7 +61,7 @@ export default function BillingPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card>
           <p className="text-xs text-steel/70">סה"כ גבייה החודש</p>
           <p className="text-2xl font-semibold text-ink">₪32,400</p>

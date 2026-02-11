@@ -20,12 +20,12 @@ export default function ClientPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-ink">{client.name}</h2>
           <p className="text-sm text-steel/70">כרטיס לקוח</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {client.tags.map((tag) => (
             <Badge key={tag}>{tag}</Badge>
           ))}
@@ -57,7 +57,7 @@ export default function ClientPage({ params }: { params: { id: string } }) {
         </div>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
         <Card>
           <SectionHeader title="ציר זמן" />
           <div className="space-y-3 text-sm">

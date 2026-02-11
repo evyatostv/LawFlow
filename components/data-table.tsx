@@ -51,7 +51,7 @@ export function DataTable<TData>({ data, columns, filterPlaceholder }: DataTable
           placeholder={filterPlaceholder ?? "חיפוש לפי כל שדה"}
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
-          className="w-72"
+          className="w-full sm:w-72"
         />
         <div className="flex items-center gap-2">
           <span className="text-xs text-steel">

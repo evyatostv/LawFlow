@@ -43,7 +43,7 @@ export default function CalendarPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-ink">יומן</h2>
           <p className="text-sm text-steel/70">דיונים ופגישות בחתך יום ושבוע</p>
@@ -58,7 +58,7 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-steel/10 bg-white/80 p-4">
           <p className="text-sm font-semibold">תצוגת {view === "day" ? "יום" : "שבוע"}</p>
           <div className="mt-3 space-y-3 text-sm">

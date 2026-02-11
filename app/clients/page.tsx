@@ -79,8 +79,8 @@ export default function ClientsPage() {
       </div>
 
       <Card>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-2 text-xs">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2 text-xs">
             <Badge>כל הלקוחות</Badge>
             <Badge>יתרה פתוחה</Badge>
             <Badge>פעילות השבוע</Badge>

@@ -56,7 +56,7 @@ export default function SettingsPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <h3 className="text-lg font-semibold text-ink">פרופיל משרד</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <Input label="שם משרד" {...register("firmName")} />
             <Input label="מספר עוסק" {...register("vatNumber")} />
           </div>
@@ -65,7 +65,7 @@ export default function SettingsPage() {
 
         <Card>
           <h3 className="text-lg font-semibold text-ink">הגדרות חשבונית</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <Input label="קידומת חשבונית" {...register("invoicePrefix")} />
             <Input label="סף מס' הקצאה B2B" type="number" {...register("allocationThreshold")} />
           </div>
@@ -77,7 +77,7 @@ export default function SettingsPage() {
 
         <Card>
           <h3 className="text-lg font-semibold text-ink">התראות וגיבויים</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <Input label="כללי התראות" {...register("notificationRules")} />
             <Input label="תזמון גיבוי" {...register("backupSchedule")} />
             <Input label="timeout (דקות)" type="number" {...register("sessionTimeoutMinutes")} />
@@ -86,7 +86,7 @@ export default function SettingsPage() {
 
         <Card>
           <h3 className="text-lg font-semibold text-ink">שפה והעדפות</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <label className="text-xs uppercase text-steel/70">
               שפה
               <select

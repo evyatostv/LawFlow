@@ -19,7 +19,7 @@ export default function CasePage({ params }: { params: { id: string } }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-ink">{caseItem.caseNumber}</h2>
           <p className="text-sm text-steel/70">{caseItem.court}</p>
@@ -54,7 +54,7 @@ export default function CasePage({ params }: { params: { id: string } }) {
         </div>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
         <Card>
           <SectionHeader title="ציר זמן" />
           <div className="space-y-3 text-sm">
