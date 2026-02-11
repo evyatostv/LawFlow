@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: "Assistant", system-ui, -apple-system, sans-serif;
+  background-color: #f4f1de;
+}
+
+* {
+  box-sizing: border-box;
+}

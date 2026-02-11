@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+  PARTIAL
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum CaseStatus {
+  OPEN
+  PENDING
+  CLOSED
+}
+
+enum CommunicationType {
+  CALL
+  EMAIL
+  WHATSAPP
+  MEETING
+}
+
+model Client {
+  id           String   @id @default(cuid())
+  name         String
+  israeliId    String
+  phone        String
+  email        String
+  address      String
+  tags         String[]
+  balance      Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  cases        Case[]
+  tasks        Task[]
+  events       Event[]
+  documents    Document[]
+  payments     Payment[]
+  invoices     Invoice[]
+  notes        Note[]
+  communications CommunicationLog[]
+}
+
+model Case {
+  id            String   @id @default(cuid())
+  clientId      String
+  caseNumber    String
+  court         String
+  opposingParty String
+  status        CaseStatus
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  client        Client   @relation(fields: [clientId], references: [id])
+  tasks         Task[]
+  events        Event[]
+  documents     Document[]
+  invoices      Invoice[]
+  notes         Note[]
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  title     String
+  dueDate   DateTime
+  priority  Priority
+  repeat    String?
+  completed Boolean  @default(false)
+  clientId  String?
+  caseId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client    Client?  @relation(fields: [clientId], references: [id])
+  case      Case?    @relation(fields: [caseId], references: [id])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  title     String
+  startAt   DateTime
+  endAt     DateTime
+  type      String
+  location  String?
+  reminder  String?
+  clientId  String?
+  caseId    String?
+  createdAt DateTime @default(now())
+  client    Client?  @relation(fields: [clientId], references: [id])
+  case      Case?    @relation(fields: [caseId], references: [id])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  url       String
+  content   String?
+  clientId  String?
+  caseId    String?
+  createdAt DateTime @default(now())
+  client    Client?  @relation(fields: [clientId], references: [id])
+  case      Case?    @relation(fields: [caseId], references: [id])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  amount    Float
+  method    String
+  status    PaymentStatus
+  paidAt    DateTime?
+  clientId  String?
+  caseId    String?
+  invoiceId String?
+  createdAt DateTime @default(now())
+  client    Client?  @relation(fields: [clientId], references: [id])
+  case      Case?    @relation(fields: [caseId], references: [id])
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+}
+
+model Invoice {
+  id              String   @id @default(cuid())
+  number          String
+  clientId        String
+  caseId          String?
+  issueDate       DateTime
+  dueDate         DateTime
+  subtotal        Float
+  vatRate         Float
+  vatAmount       Float
+  total           Float
+  status          PaymentStatus
+  allocationNumber String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  client          Client   @relation(fields: [clientId], references: [id])
+  case            Case?    @relation(fields: [caseId], references: [id])
+  payments        Payment[]
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  body      String
+  clientId  String?
+  caseId    String?
+  createdAt DateTime @default(now())
+  client    Client?  @relation(fields: [clientId], references: [id])
+  case      Case?    @relation(fields: [caseId], references: [id])
+}
+
+model CommunicationLog {
+  id        String   @id @default(cuid())
+  type      CommunicationType
+  summary   String
+  timestamp DateTime
+  attachments String[]
+  clientId  String?
+  caseId    String?
+  createdAt DateTime @default(now())
+  client    Client?  @relation(fields: [clientId], references: [id])
+  case      Case?    @relation(fields: [caseId], references: [id])
+}
+
+model Template {
+  id        String   @id @default(cuid())
+  name      String
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model Settings {
+  id                        String   @id @default(cuid())
+  firmName                  String
+  vatNumber                 String
+  invoicePrefix             String
+  enableAllocationNumber    Boolean  @default(false)
+  allocationThreshold       Float    @default(0)
+  notificationRules         String
+  backupSchedule            String
+  sessionTimeoutMinutes     Int
+  updatedAt                 DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  actor     String
+  targetId  String?
+  createdAt DateTime @default(now())
+}
