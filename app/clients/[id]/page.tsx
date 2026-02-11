@@ -4,6 +4,12 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/SectionHeader";
 import { clients, cases, tasks, documents, invoices, notes, payments } from "@/lib/data";
 
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return clients.map((client) => ({ id: client.id }));
+}
+
 export default function ClientPage({ params }: { params: { id: string } }) {
   const client = clients.find((item) => item.id === params.id);
   if (!client) {

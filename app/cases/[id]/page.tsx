@@ -5,6 +5,12 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/SectionHeader";
 import { cases, tasks, documents, notes, events, invoices } from "@/lib/data";
 
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return cases.map((caseItem) => ({ id: caseItem.id }));
+}
+
 export default function CasePage({ params }: { params: { id: string } }) {
   const caseItem = cases.find((item) => item.id === params.id);
   if (!caseItem) {

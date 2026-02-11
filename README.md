@@ -18,6 +18,14 @@ npm run seed
 npm run dev
 ```
 
+## GitHub Pages
+This repo is configured for GitHub Pages deployment via Actions.
+
+1. In GitHub: Settings → Pages → Build and deployment → Source: GitHub Actions.
+2. Push to `main`.
+3. Your site will be available at:
+   `https://evyatostv.github.io/LawFlow/`
+
 ## Notes
 - Default route is Today dashboard.
 - Global search: `Ctrl/⌘ + K`
