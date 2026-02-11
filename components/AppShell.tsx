@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QuickAdd } from "@/components/QuickAdd";
-import { useAppData } from "@/components/AppDataProvider";
 import clsx from "clsx";
 
 const navItems = [
@@ -21,15 +20,14 @@ const navItems = [
   { href: "/settings", label: "הגדרות" },
 ];
 
+type Summary = { dueToday: number; unpaid: number };
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [search, setSearch] = React.useState("");
   const [navOpen, setNavOpen] = React.useState(false);
   const [notifyOpen, setNotifyOpen] = React.useState(false);
-  const { tasks, invoices } = useAppData();
-
-  const dueToday = tasks.filter((task) => task.dueDate === new Date().toISOString().slice(0, 10));
-  const unpaid = invoices.filter((invoice) => invoice.status !== "PAID");
+  const [summary, setSummary] = React.useState<Summary>({ dueToday: 0, unpaid: 0 });
 
   React.useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -51,6 +49,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  React.useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await fetch("/api/summary");
+        if (!res.ok) return;
+        const data = (await res.json()) as Summary;
+        setSummary(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchSummary();
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sand via-white to-mint font-body text-ink">
@@ -122,21 +134,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   size="sm"
                   onClick={() => setNotifyOpen((prev) => !prev)}
                 >
-                  התראות ({dueToday.length + unpaid.length})
+                  התראות ({summary.dueToday + summary.unpaid})
                 </Button>
                 {notifyOpen ? (
                   <div className="absolute left-0 top-12 z-20 w-64 rounded-2xl border border-steel/10 bg-white p-4 shadow-soft">
                     <p className="text-sm font-semibold text-ink">תזכורות מהירות</p>
                     <div className="mt-2 space-y-2 text-xs text-steel/80">
-                      {dueToday.slice(0, 3).map((task) => (
-                        <div key={task.id}>משימה היום: {task.title}</div>
-                      ))}
-                      {unpaid.slice(0, 3).map((invoice) => (
-                        <div key={invoice.id}>חשבונית פתוחה: {invoice.number}</div>
-                      ))}
-                      {dueToday.length === 0 && unpaid.length === 0 ? (
-                        <div>אין תזכורות כרגע.</div>
-                      ) : null}
+                      <div>משימות להיום: {summary.dueToday}</div>
+                      <div>חשבוניות פתוחות: {summary.unpaid}</div>
                     </div>
                   </div>
                 ) : null}
@@ -155,9 +160,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="text-xs text-steel/70">⌘/Ctrl + K</span>
             </div>
           </header>
-          <div className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+          <div className="flex-1 px-4 py-6 pb-20 sm:px-6 lg:px-8 lg:pb-6">{children}</div>
         </main>
       </div>
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-steel/10 bg-white/90 backdrop-blur lg:hidden">
+        <div className="grid grid-cols-5 gap-1 px-2 py-2 text-xs">
+          {navItems.slice(0, 5).map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={clsx(
+                "rounded-lg px-2 py-2 text-center",
+                pathname === item.href ? "bg-ink text-white" : "text-ink"
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }

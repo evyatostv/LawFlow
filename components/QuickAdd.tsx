@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAppData } from "@/components/AppDataProvider";
+import { createQuickAdd } from "@/app/quick-add/actions";
 
 const quickAddSchema = z.object({
   type: z.enum(["note", "task", "payment", "document"]),
@@ -18,7 +18,7 @@ type QuickAddValues = z.infer<typeof quickAddSchema>;
 
 export function QuickAdd() {
   const [open, setOpen] = React.useState(false);
-  const { addTask, addNote, addPayment, addDocument } = useAppData();
+  const [loading, setLoading] = React.useState(false);
   const {
     register,
     handleSubmit,
@@ -32,40 +32,16 @@ export function QuickAdd() {
 
   const type = watch("type");
 
-  const onSubmit = (values: QuickAddValues) => {
-    if (values.type === "task") {
-      addTask({
-        title: values.title,
-        dueDate: new Date().toISOString().slice(0, 10),
-        priority: "MEDIUM",
-        repeat: undefined,
-      });
-    }
-    if (values.type === "note") {
-      addNote({
-        body: values.title,
-        timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-      });
-    }
-    if (values.type === "payment") {
-      addPayment({
-        amount: Number(values.amount ?? 0),
-        method: "אשראי",
-        status: "PARTIAL",
-        date: new Date().toISOString().slice(0, 10),
-      });
-    }
-    if (values.type === "document") {
-      addDocument({
-        name: values.title,
-        type: "PDF",
-        clientId: undefined,
-        caseId: undefined,
-        updatedAt: new Date().toISOString().slice(0, 10),
-      });
-    }
+  const onSubmit = async (values: QuickAddValues) => {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("type", values.type);
+    formData.append("title", values.title);
+    if (values.amount) formData.append("amount", values.amount);
+    await createQuickAdd(formData);
     reset();
     setOpen(false);
+    setLoading(false);
   };
 
   return (
@@ -99,8 +75,8 @@ export function QuickAdd() {
                 <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
                   ביטול
                 </Button>
-                <Button type="submit" size="sm">
-                  שמור
+                <Button type="submit" size="sm" disabled={loading}>
+                  {loading ? "שומר..." : "שמור"}
                 </Button>
               </div>
             </div>

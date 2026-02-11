@@ -1,12 +1,17 @@
-"use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/SectionHeader";
-import { useAppData } from "@/components/AppDataProvider";
+import { getClients, getEvents, getInvoices, getTasks } from "@/lib/queries";
 
-export default function HomePage() {
-  const { clients, events, invoices, tasks } = useAppData();
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const [clients, events, invoices, tasks] = await Promise.all([
+    getClients(),
+    getEvents(),
+    getInvoices(),
+    getTasks(),
+  ]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -25,7 +30,9 @@ export default function HomePage() {
             {events.map((event) => (
               <div key={event.id} className="flex items-center justify-between text-sm">
                 <span>{event.title}</span>
-                <span className="text-steel/70">{event.startAt.split(" ")[1]}</span>
+                <span className="text-steel/70">
+                  {event.startAt.toISOString().slice(11, 16)}
+                </span>
               </div>
             ))}
           </CardContent>
@@ -39,7 +46,7 @@ export default function HomePage() {
             {tasks.map((task) => (
               <div key={task.id} className="flex items-center justify-between text-sm">
                 <span>{task.title}</span>
-                <span className="text-steel/70">{task.dueDate}</span>
+                <span className="text-steel/70">{task.dueDate.toISOString().slice(0, 10)}</span>
               </div>
             ))}
           </CardContent>
@@ -73,10 +80,7 @@ export default function HomePage() {
 
       <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <Card>
-          <SectionHeader
-            title="פעילות לקוחות אחרונה"
-            action={{ label: "כל הפעילות", onClick: () => alert("פתיחת מסך פעילות (דמו)") }}
-          />
+          <SectionHeader title="פעילות לקוחות אחרונה" />
           <div className="space-y-3">
             {clients.map((client) => (
               <div key={client.id} className="flex items-center justify-between rounded-xl bg-white/70 px-4 py-3">
@@ -90,10 +94,7 @@ export default function HomePage() {
           </div>
         </Card>
         <Card>
-          <SectionHeader
-            title="תשלומים שלא נסגרו"
-            action={{ label: "הפק דוח", onClick: () => alert("דוח הופק (דמו)") }}
-          />
+          <SectionHeader title="תשלומים שלא נסגרו" />
           <div className="space-y-3 text-sm">
             {invoices.map((invoice) => (
               <div key={invoice.id} className="flex items-center justify-between">

@@ -10,7 +10,7 @@ async function main() {
       phone: "+972-50-123-4567",
       email: "office@cohenlaw.co.il",
       address: "דיזנגוף 120, תל אביב",
-      tags: ["נדל" + "ן", "ליטיגציה"],
+      tags: ["נדלן", "ליטיגציה"],
       balance: 12400,
     },
   });
@@ -116,12 +116,16 @@ async function main() {
     data: {
       firmName: "כהן ושות'",
       vatNumber: "515123456",
+      firmAddress: "דיזנגוף 120, תל אביב",
+      firmPhone: "+972-3-555-1234",
+      firmEmail: "office@cohenlaw.co.il",
       invoicePrefix: "INV-",
       enableAllocationNumber: true,
       allocationThreshold: 5000,
       notificationRules: "תזכורת 24 שעות לפני",
       backupSchedule: "יומי 02:00",
       sessionTimeoutMinutes: 30,
+      invoiceFooter: "תודה שבחרתם בנו",
     },
   });
 

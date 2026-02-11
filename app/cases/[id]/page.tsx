@@ -1,12 +1,24 @@
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import CaseDetailClient from "./CaseDetailClient";
-import { cases } from "@/lib/data";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
-export function generateStaticParams() {
-  return cases.map((caseItem) => ({ id: caseItem.id }));
-}
+export default async function CasePage({ params }: { params: { id: string } }) {
+  const caseItem = await prisma.case.findUnique({
+    where: { id: params.id },
+    include: {
+      tasks: true,
+      events: true,
+      documents: true,
+      notes: true,
+      invoices: true,
+    },
+  });
 
-export default function CasePage() {
-  return <CaseDetailClient />;
+  if (!caseItem) {
+    notFound();
+  }
+
+  return <CaseDetailClient caseItem={caseItem} />;
 }
