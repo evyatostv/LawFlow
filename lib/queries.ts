@@ -25,7 +25,10 @@ export async function getEvents() {
 }
 
 export async function getInvoices() {
-  return prisma.invoice.findMany({ orderBy: { createdAt: "desc" } });
+  return prisma.invoice.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { receipts: true, client: true, lines: true },
+  });
 }
 
 export async function getDocuments() {

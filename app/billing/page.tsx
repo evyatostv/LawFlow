@@ -10,10 +10,11 @@ export default async function BillingPage() {
     enableAllocationNumber: settings?.enableAllocationNumber ?? false,
     allocationThreshold: settings?.allocationThreshold ?? 0,
   };
+  const clientOptions = clients.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }));
   return (
     <BillingClient
       invoices={invoices}
-      clients={clients.map((c) => ({ id: c.id, name: c.name }))}
+      clients={clientOptions}
       settings={invoiceSettings}
     />
   );

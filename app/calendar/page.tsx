@@ -8,8 +8,8 @@ export default async function CalendarPage() {
   return (
     <CalendarClient
       events={events}
-      clients={clients.map((c) => ({ id: c.id, name: c.name }))}
-      cases={cases.map((c) => ({ id: c.id, caseNumber: c.caseNumber }))}
+      clients={clients.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }))}
+      cases={cases.map((c: { id: string; caseNumber: string }) => ({ id: c.id, caseNumber: c.caseNumber }))}
     />
   );
 }

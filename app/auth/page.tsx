@@ -34,13 +34,14 @@ export default function AuthPage() {
     const res = await signIn("credentials", {
       email,
       code,
-      redirect: true,
-      callbackUrl: "/",
+      redirect: false,
     });
     if (res?.error) {
       setMessage("קוד לא תקין");
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    window.location.href = "/";
   };
 
   return (

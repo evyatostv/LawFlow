@@ -27,7 +27,7 @@ export default async function HomePage() {
             <Badge>{events.length}</Badge>
           </CardHeader>
           <CardContent>
-            {events.map((event) => (
+            {events.map((event: any) => (
               <div key={event.id} className="flex items-center justify-between text-sm">
                 <span>{event.title}</span>
                 <span className="text-steel/70">
@@ -40,10 +40,10 @@ export default async function HomePage() {
         <Card>
           <CardHeader>
             <CardTitle>משימות דחופות</CardTitle>
-            <Badge>{tasks.filter((task) => task.priority === "HIGH" || task.priority === "URGENT").length}</Badge>
+            <Badge>{tasks.filter((task: any) => task.priority === "HIGH" || task.priority === "URGENT").length}</Badge>
           </CardHeader>
           <CardContent>
-            {tasks.map((task) => (
+            {tasks.map((task: any) => (
               <div key={task.id} className="flex items-center justify-between text-sm">
                 <span>{task.title}</span>
                 <span className="text-steel/70">{task.dueDate.toISOString().slice(0, 10)}</span>
@@ -65,10 +65,10 @@ export default async function HomePage() {
         <Card>
           <CardHeader>
             <CardTitle>חשבוניות פתוחות</CardTitle>
-            <Badge>{invoices.filter((invoice) => invoice.status !== "PAID").length}</Badge>
+            <Badge>{invoices.filter((invoice: any) => invoice.status !== "PAID").length}</Badge>
           </CardHeader>
           <CardContent>
-            {invoices.map((invoice) => (
+            {invoices.map((invoice: any) => (
               <div key={invoice.id} className="flex items-center justify-between text-sm">
                 <span>{invoice.number}</span>
                 <span className="text-steel/70">₪{invoice.total.toLocaleString("he-IL")}</span>
@@ -82,7 +82,7 @@ export default async function HomePage() {
         <Card>
           <SectionHeader title="פעילות לקוחות אחרונה" />
           <div className="space-y-3">
-            {clients.map((client) => (
+            {clients.map((client: any) => (
               <div key={client.id} className="flex items-center justify-between rounded-xl bg-white/70 px-4 py-3">
                 <div>
                   <p className="text-sm font-semibold text-ink">{client.name}</p>
@@ -96,7 +96,7 @@ export default async function HomePage() {
         <Card>
           <SectionHeader title="תשלומים שלא נסגרו" />
           <div className="space-y-3 text-sm">
-            {invoices.map((invoice) => (
+            {invoices.map((invoice: any) => (
               <div key={invoice.id} className="flex items-center justify-between">
                 <span>{invoice.number}</span>
                 <span className="text-steel/70">{invoice.status}</span>

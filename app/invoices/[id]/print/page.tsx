@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function InvoicePrintPage({ params }: { params: { id: string } }) {
   const invoice = await prisma.invoice.findUnique({
     where: { id: params.id },
-    include: { client: true },
+    include: { client: true, case: true, lines: true, receipts: true },
   });
   if (!invoice) notFound();
 
@@ -22,6 +22,9 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
             <h1 className="text-2xl font-semibold">חשבונית מס</h1>
             <p className="text-sm text-steel/70">מספר: {invoice.number}</p>
             <p className="text-sm text-steel/70">תאריך: {invoice.issueDate.toISOString().slice(0, 10)}</p>
+            {invoice.case ? (
+              <p className="text-sm text-steel/70">תיק: {invoice.case.caseNumber}</p>
+            ) : null}
           </div>
           <div className="text-sm text-steel/70">
             {settings?.logoUrl ? (
@@ -43,13 +46,36 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
         </div>
 
         <div className="mt-6">
+          <table className="w-full text-sm">
+            <thead className="text-xs text-steel/70">
+              <tr>
+                <th className="py-2 text-right">תיאור</th>
+                <th className="py-2 text-right">כמות</th>
+                <th className="py-2 text-right">מחיר</th>
+                <th className="py-2 text-right">סה"כ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoice.lines.map((line: any) => (
+                <tr key={line.id} className="border-t border-steel/10">
+                  <td className="py-2">{line.description}</td>
+                  <td className="py-2">{line.quantity}</td>
+                  <td className="py-2">₪{line.unitPrice.toFixed(2)}</td>
+                  <td className="py-2">₪{line.total.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-6">
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div className="rounded-lg bg-sand/60 p-3">
               <p className="text-xs text-steel/70">סה"כ ללא מע"מ</p>
               <p className="font-semibold">₪{invoice.subtotal.toFixed(2)}</p>
             </div>
             <div className="rounded-lg bg-sand/60 p-3">
-              <p className="text-xs text-steel/70">מע"מ</p>
+              <p className="text-xs text-steel/70">מע"מ ({(invoice.vatRate * 100).toFixed(0)}%)</p>
               <p className="font-semibold">₪{invoice.vatAmount.toFixed(2)}</p>
             </div>
             <div className="rounded-lg bg-sand/60 p-3">
@@ -65,6 +91,11 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
             <p className="font-semibold">{invoice.allocationNumber}</p>
           </div>
         ) : null}
+
+        <div className="mt-6 text-sm">
+          <p className="text-xs text-steel/70">תקבולים</p>
+          <p>{invoice.receipts.length} קבלות הונפקו</p>
+        </div>
 
         {invoice.notes ? (
           <div className="mt-6 text-sm">

@@ -2,28 +2,33 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
 
 const schema = z.object({
-  number: z.string().min(2),
   clientId: z.string().min(1),
   caseId: z.string().optional(),
   total: z.coerce.number().min(0),
   status: z.enum(["PAID", "UNPAID", "PARTIAL"]),
   dueDate: z.string().min(8),
   allocationNumber: z.string().optional(),
+  description: z.string().min(2),
 });
+
+function formatInvoiceNumber(prefix: string, year: number, current: number) {
+  return `${prefix}-${year}-${String(current).padStart(6, "0")}`;
+}
 
 export async function createInvoice(formData: FormData) {
   const parsed = schema.safeParse({
-    number: formData.get("number"),
     clientId: formData.get("clientId"),
     caseId: formData.get("caseId") || undefined,
     total: formData.get("total"),
     status: formData.get("status"),
     dueDate: formData.get("dueDate"),
     allocationNumber: formData.get("allocationNumber") || undefined,
+    description: formData.get("description"),
   });
 
   if (!parsed.success) {
@@ -33,21 +38,47 @@ export async function createInvoice(formData: FormData) {
   const vatRate = 0.17;
   const subtotal = parsed.data.total / (1 + vatRate);
   const vatAmount = parsed.data.total - subtotal;
+  const year = new Date().getFullYear();
 
-  const created = await prisma.invoice.create({
-    data: {
-      number: parsed.data.number,
-      clientId: parsed.data.clientId,
-      caseId: parsed.data.caseId,
-      issueDate: new Date(),
-      dueDate: new Date(parsed.data.dueDate),
-      subtotal,
-      vatRate,
-      vatAmount,
-      total: parsed.data.total,
-      status: parsed.data.status,
-      allocationNumber: parsed.data.allocationNumber,
-    },
+  const settings = await prisma.settings.findFirst();
+  const prefix = settings?.invoicePrefix || "LF";
+
+  const created = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const counter = await tx.invoiceCounter.upsert({
+      where: { year_prefix: { year, prefix } },
+      update: { current: { increment: 1 } },
+      create: { year, prefix, current: 1 },
+    });
+
+    const number = formatInvoiceNumber(prefix, year, counter.current);
+
+    const invoice = await tx.invoice.create({
+      data: {
+        number,
+        clientId: parsed.data.clientId,
+        caseId: parsed.data.caseId,
+        issueDate: new Date(),
+        dueDate: new Date(parsed.data.dueDate),
+        subtotal,
+        vatRate,
+        vatAmount,
+        total: parsed.data.total,
+        status: parsed.data.status,
+        allocationNumber: parsed.data.allocationNumber,
+      },
+    });
+
+    await tx.invoiceLine.create({
+      data: {
+        invoiceId: invoice.id,
+        description: parsed.data.description,
+        quantity: 1,
+        unitPrice: parsed.data.total,
+        total: parsed.data.total,
+      },
+    });
+
+    return invoice;
   });
 
   await logAudit("invoice.create", created.id);

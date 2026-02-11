@@ -38,7 +38,7 @@ export default function CaseDetailClient({ caseItem }: { caseItem: CaseDetail })
   const [invoiceTotal, setInvoiceTotal] = React.useState("");
   const [docName, setDocName] = React.useState("");
 
-  const submit = async (handler: () => Promise<void>) => {
+  const submit = async (handler: () => Promise<unknown>) => {
     setLoading(true);
     await handler();
     setLoading(false);

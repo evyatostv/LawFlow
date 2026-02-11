@@ -131,6 +131,8 @@ model Case {
   documents     Document[]
   invoices      Invoice[]
   notes         Note[]
+  payments      Payment[]
+  communications CommunicationLog[]
 }
 
 model Task {
@@ -186,10 +188,12 @@ model Payment {
   clientId  String?
   caseId    String?
   invoiceId String?
+  receiptId String?
   createdAt DateTime @default(now())
   client    Client?  @relation(fields: [clientId], references: [id])
   case      Case?    @relation(fields: [caseId], references: [id])
   invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  receipt   Receipt? @relation(fields: [receiptId], references: [id])
 }
 
 model Invoice {
@@ -210,6 +214,31 @@ model Invoice {
   client           Client   @relation(fields: [clientId], references: [id])
   case             Case?    @relation(fields: [caseId], references: [id])
   payments         Payment[]
+  receipts         Receipt[]
+  lines            InvoiceLine[]
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Float   @default(1)
+  unitPrice   Float
+  total       Float
+  createdAt   DateTime @default(now())
+  invoice     Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model Receipt {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  number      String
+  amount      Float
+  method      String
+  issuedAt    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  payments    Payment[]
 }
 
 model Note {
@@ -238,8 +267,10 @@ model CommunicationLog {
 model Template {
   id        String   @id @default(cuid())
   name      String
+  category  String
   body      String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Settings {
@@ -259,6 +290,16 @@ model Settings {
   sessionTimeoutMinutes  Int
   invoiceFooter          String?
   updatedAt              DateTime @updatedAt
+}
+
+model InvoiceCounter {
+  id        String   @id @default(cuid())
+  year      Int
+  prefix    String
+  current   Int
+  updatedAt DateTime @updatedAt
+
+  @@unique([year, prefix])
 }
 
 model AuditLog {

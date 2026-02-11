@@ -31,7 +31,7 @@ export default async function ClientPage({ params }: { params: { id: string } })
           <p className="text-sm text-steel/70">כרטיס לקוח</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {client.tags.map((tag) => (
+          {client.tags.map((tag: string) => (
             <Badge key={tag}>{tag}</Badge>
           ))}
         </div>
@@ -66,25 +66,25 @@ export default async function ClientPage({ params }: { params: { id: string } })
         <Card>
           <SectionHeader title="ציר זמן" />
           <div className="space-y-3 text-sm">
-            {client.notes.map((note) => (
+            {client.notes.map((note: any) => (
               <div key={note.id} className="rounded-xl bg-white/70 p-3">
                 <p>{note.body}</p>
                 <p className="text-xs text-steel/70">{note.createdAt.toISOString().slice(0, 16).replace("T", " ")}</p>
               </div>
             ))}
-            {client.tasks.map((task) => (
+            {client.tasks.map((task: any) => (
               <div key={task.id} className="rounded-xl bg-white/70 p-3">
                 <p>משימה: {task.title}</p>
                 <p className="text-xs text-steel/70">יעד: {task.dueDate.toISOString().slice(0, 10)}</p>
               </div>
             ))}
-            {client.payments.map((payment) => (
+            {client.payments.map((payment: any) => (
               <div key={payment.id} className="rounded-xl bg-white/70 p-3">
                 <p>תשלום: ₪{payment.amount.toLocaleString("he-IL")}</p>
                 <p className="text-xs text-steel/70">{payment.createdAt.toISOString().slice(0, 10)}</p>
               </div>
             ))}
-            {client.documents.map((doc) => (
+            {client.documents.map((doc: any) => (
               <div key={doc.id} className="rounded-xl bg-white/70 p-3">
                 <p>מסמך: {doc.name}</p>
                 <p className="text-xs text-steel/70">עודכן: {doc.updatedAt.toISOString().slice(0, 10)}</p>
@@ -95,7 +95,7 @@ export default async function ClientPage({ params }: { params: { id: string } })
         <Card>
           <SectionHeader title="תיקים פעילים" />
           <div className="space-y-3">
-            {client.cases.map((caseItem) => (
+            {client.cases.map((caseItem: any) => (
               <div key={caseItem.id} className="rounded-xl border border-steel/10 bg-white/70 p-3 text-sm">
                 <p className="font-semibold">{caseItem.caseNumber}</p>
                 <p className="text-xs text-steel/70">{caseItem.court}</p>
@@ -103,7 +103,7 @@ export default async function ClientPage({ params }: { params: { id: string } })
             ))}
           </div>
           <div className="mt-4 rounded-xl bg-sand/80 p-3 text-xs text-steel/70">
-            תשלומים פתוחים: {client.invoices.filter((invoice) => invoice.status !== "PAID").length}
+            תשלומים פתוחים: {client.invoices.filter((invoice: any) => invoice.status !== "PAID").length}
           </div>
         </Card>
       </div>

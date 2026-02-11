@@ -15,6 +15,7 @@ const navItems = [
   { href: "/tasks", label: "משימות" },
   { href: "/calendar", label: "יומן" },
   { href: "/documents", label: "מסמכים" },
+  { href: "/templates", label: "תבניות" },
   { href: "/billing", label: "חיובים" },
   { href: "/communications", label: "תקשורת" },
   { href: "/settings", label: "הגדרות" },

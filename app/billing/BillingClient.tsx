@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/Modal";
 import { createInvoice } from "@/app/billing/actions";
+import { createReceipt } from "@/app/receipts/actions";
 import { downloadCsv } from "@/lib/csv";
 
 type Invoice = {
@@ -17,6 +18,9 @@ type Invoice = {
   status: "PAID" | "UNPAID" | "PARTIAL";
   allocationNumber?: string | null;
   dueDate: Date;
+  receipts: { id: string; amount: number }[];
+  client: { name: string };
+  lines: { description: string }[];
 };
 
 type Client = { id: string; name: string };
@@ -49,6 +53,11 @@ const columns = [
   },
   { accessorKey: "number", header: "חשבונית" },
   {
+    accessorKey: "client",
+    header: "לקוח",
+    cell: ({ row }: any) => row.original.client?.name ?? "-",
+  },
+  {
     accessorKey: "dueDate",
     header: "תאריך יעד",
     cell: ({ row }: any) => new Date(row.original.dueDate).toISOString().slice(0, 10),
@@ -80,14 +89,20 @@ export default function BillingClient({
   settings: Settings;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [receiptOpen, setReceiptOpen] = React.useState(false);
+  const [selectedInvoice, setSelectedInvoice] = React.useState<Invoice | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [form, setForm] = React.useState({
-    number: settings.invoicePrefix || `INV-${new Date().getFullYear()}-`,
     clientId: clients[0]?.id ?? "",
     total: "",
     status: "UNPAID",
     dueDate: new Date().toISOString().slice(0, 10),
     allocationNumber: "",
+    description: "שירותים משפטיים",
+  });
+  const [receiptForm, setReceiptForm] = React.useState({
+    amount: "",
+    method: "העברה בנקאית",
   });
 
   const onSubmit = async (event: React.FormEvent) => {
@@ -96,15 +111,31 @@ export default function BillingClient({
     const totalValue = Number(form.total) || 0;
     const shouldRequireAllocation = settings.enableAllocationNumber && totalValue >= settings.allocationThreshold;
     const formData = new FormData();
-    formData.append("number", form.number + Math.floor(Math.random() * 1000).toString().padStart(3, "0"));
     formData.append("clientId", form.clientId);
     formData.append("total", form.total);
     formData.append("status", form.status);
     formData.append("dueDate", form.dueDate);
+    formData.append("description", form.description);
     if (shouldRequireAllocation && form.allocationNumber) formData.append("allocationNumber", form.allocationNumber);
     await createInvoice(formData);
     setLoading(false);
     setOpen(false);
+  };
+
+  const onReceiptSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedInvoice) return;
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("invoiceId", selectedInvoice.id);
+    formData.append("amount", receiptForm.amount);
+    formData.append("method", receiptForm.method);
+    const res = await createReceipt(formData);
+    setLoading(false);
+    setReceiptOpen(false);
+    if (res.receiptId) {
+      window.open(`/receipts/${res.receiptId}/print`, "_blank");
+    }
   };
 
   return (
@@ -182,11 +213,35 @@ export default function BillingClient({
         <p className="mt-3 text-xs text-steel/70">מעקב סטטוס: משולם, לא משולם, חלקי.</p>
       </Card>
 
+      <div className="rounded-2xl border border-steel/10 bg-white/80 p-4">
+        <div className="mb-2 text-sm font-semibold text-ink">הפקת קבלות</div>
+        <div className="grid gap-2">
+          {invoices.map((invoice) => (
+            <div key={invoice.id} className="flex items-center justify-between rounded-xl bg-white/70 px-3 py-2 text-sm">
+              <div>
+                <p className="font-semibold">{invoice.number}</p>
+                <p className="text-xs text-steel/70">{invoice.client?.name ?? ""}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setSelectedInvoice(invoice);
+                  setReceiptOpen(true);
+                }}
+              >
+                הוצא קבלה
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <DataTable data={invoices} columns={columns} filterPlaceholder="חיפוש לפי מספר חשבונית" />
 
       <Modal open={open} onClose={() => setOpen(false)} title="חשבונית חדשה">
         <form className="space-y-3" onSubmit={onSubmit}>
-          <Input label="מספר בסיס" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
+          <Input label="תיאור שירות" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <Input label="סכום" type="number" value={form.total} onChange={(e) => setForm({ ...form, total: e.target.value })} />
           <Input label="תאריך יעד" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
           {settings.enableAllocationNumber ? (
@@ -220,6 +275,26 @@ export default function BillingClient({
           <div className="flex gap-2">
             <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>בטל</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={receiptOpen} onClose={() => setReceiptOpen(false)} title="הפקת קבלה">
+        <form className="space-y-3" onSubmit={onReceiptSubmit}>
+          <Input
+            label="סכום"
+            type="number"
+            value={receiptForm.amount}
+            onChange={(e) => setReceiptForm({ ...receiptForm, amount: e.target.value })}
+          />
+          <Input
+            label="שיטת תשלום"
+            value={receiptForm.method}
+            onChange={(e) => setReceiptForm({ ...receiptForm, method: e.target.value })}
+          />
+          <div className="flex gap-2">
+            <Button type="submit" disabled={loading || !selectedInvoice}>{loading ? "שומר..." : "שמור"}</Button>
+            <Button type="button" variant="ghost" onClick={() => setReceiptOpen(false)}>בטל</Button>
           </div>
         </form>
       </Modal>
