@@ -22,8 +22,8 @@ export default function AuthPage() {
           </div>
         </div>
         <div className="mt-6 flex gap-2">
-          <Button>כניסה</Button>
-          <Button variant="ghost">שלח קוד חדש</Button>
+          <Button onClick={() => alert("כניסה בוצעה (דמו)")}>כניסה</Button>
+          <Button variant="ghost" onClick={() => alert("נשלח קוד חדש (דמו)")}>שלח קוד חדש</Button>
         </div>
       </Card>
     </div>

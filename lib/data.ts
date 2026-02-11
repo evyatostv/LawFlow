@@ -52,6 +52,38 @@ export type Invoice = {
   dueDate: string;
 };
 
+export type DocumentItem = {
+  id: string;
+  name: string;
+  type: string;
+  clientId?: string;
+  caseId?: string;
+  updatedAt: string;
+};
+
+export type CommunicationItem = {
+  id: string;
+  type: string;
+  summary: string;
+  timestamp: string;
+  clientId?: string;
+  attachments: string[];
+};
+
+export type NoteItem = {
+  id: string;
+  body: string;
+  timestamp: string;
+};
+
+export type PaymentItem = {
+  id: string;
+  amount: number;
+  method: string;
+  status: "PAID" | "UNPAID" | "PARTIAL";
+  date: string;
+};
+
 export const clients: Client[] = [
   {
     id: "c1",

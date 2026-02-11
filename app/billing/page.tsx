@@ -1,17 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { invoices, Invoice } from "@/lib/data";
+import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/Modal";
+import { useAppData } from "@/components/AppDataProvider";
+import { downloadCsv } from "@/lib/csv";
 
-const columns: ColumnDef<Invoice>[] = [
+const columns = [
   {
     id: "select",
-    header: ({ table }) => (
+    header: ({ table }: any) => (
       <input
         type="checkbox"
         className="h-4 w-4"
@@ -19,7 +21,7 @@ const columns: ColumnDef<Invoice>[] = [
         onChange={table.getToggleAllRowsSelectedHandler()}
       />
     ),
-    cell: ({ row }) => (
+    cell: ({ row }: any) => (
       <input
         type="checkbox"
         className="h-4 w-4"
@@ -33,21 +35,46 @@ const columns: ColumnDef<Invoice>[] = [
   {
     accessorKey: "status",
     header: "סטטוס",
-    cell: ({ row }) => <Badge>{row.original.status}</Badge>,
+    cell: ({ row }: any) => <Badge>{row.original.status}</Badge>,
   },
   {
     accessorKey: "allocationNumber",
     header: "מס' הקצאה",
-    cell: ({ row }) => row.original.allocationNumber ?? "-",
+    cell: ({ row }: any) => row.original.allocationNumber ?? "-",
   },
   {
     accessorKey: "total",
     header: "סכום",
-    cell: ({ row }) => `₪${row.original.total.toLocaleString("he-IL")}`,
+    cell: ({ row }: any) => `₪${row.original.total.toLocaleString("he-IL")}`,
   },
 ];
 
 export default function BillingPage() {
+  const { invoices, clients, addInvoice } = useAppData();
+  const [open, setOpen] = React.useState(false);
+  const [form, setForm] = React.useState({
+    number: `INV-${new Date().getFullYear()}-`,
+    clientId: clients[0]?.id ?? "",
+    total: "",
+    status: "UNPAID",
+    dueDate: new Date().toISOString().slice(0, 10),
+    allocationNumber: "",
+  });
+
+  const onSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const subtotal = Number(form.total) || 0;
+    addInvoice({
+      number: form.number + Math.floor(Math.random() * 1000).toString().padStart(3, "0"),
+      clientId: form.clientId,
+      total: subtotal,
+      status: form.status as "PAID" | "UNPAID" | "PARTIAL",
+      allocationNumber: form.allocationNumber || undefined,
+      dueDate: form.dueDate,
+    });
+    setOpen(false);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -56,8 +83,22 @@ export default function BillingPage() {
           <p className="text-sm text-steel/70">מעקב אחר תשלומים, הפקת חשבוניות וקבלות</p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm">חשבונית חדשה</Button>
-          <Button size="sm" variant="secondary">ייצוא CSV</Button>
+          <Button size="sm" onClick={() => setOpen(true)}>חשבונית חדשה</Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() =>
+              downloadCsv("invoices.csv", invoices.map((inv) => ({
+                number: inv.number,
+                status: inv.status,
+                total: inv.total,
+                dueDate: inv.dueDate,
+                allocationNumber: inv.allocationNumber ?? "",
+              })))
+            }
+          >
+            ייצוא CSV
+          </Button>
         </div>
       </div>
 
@@ -82,8 +123,8 @@ export default function BillingPage() {
           תומך במספור אוטומטי, מע"מ, פרטי לקוח, ושדה הקצאה לחשבוניות B2B מעל הסף.
         </p>
         <div className="mt-3 flex gap-2">
-          <Button size="sm" variant="secondary">תצוגת PDF</Button>
-          <Button size="sm" variant="ghost">הפק קבלה</Button>
+          <Button size="sm" variant="secondary" onClick={() => alert("PDF הופק (דמו)")}>תצוגת PDF</Button>
+          <Button size="sm" variant="ghost" onClick={() => alert("קבלה הופקה (דמו)")}>הפק קבלה</Button>
         </div>
       </Card>
 
@@ -99,6 +140,43 @@ export default function BillingPage() {
       </Card>
 
       <DataTable data={invoices} columns={columns} filterPlaceholder="חיפוש לפי מספר חשבונית" />
+
+      <Modal open={open} onClose={() => setOpen(false)} title="חשבונית חדשה">
+        <form className="space-y-3" onSubmit={onSubmit}>
+          <Input label="מספר בסיס" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
+          <Input label="סכום" type="number" value={form.total} onChange={(e) => setForm({ ...form, total: e.target.value })} />
+          <Input label="תאריך יעד" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+          <Input label="מס' הקצאה" value={form.allocationNumber} onChange={(e) => setForm({ ...form, allocationNumber: e.target.value })} />
+          <label className="text-xs uppercase text-steel/70">
+            סטטוס
+            <select
+              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+            >
+              <option value="PAID">משולם</option>
+              <option value="UNPAID">לא משולם</option>
+              <option value="PARTIAL">חלקי</option>
+            </select>
+          </label>
+          <label className="text-xs uppercase text-steel/70">
+            לקוח
+            <select
+              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
+              value={form.clientId}
+              onChange={(e) => setForm({ ...form, clientId: e.target.value })}
+            >
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>{client.name}</option>
+              ))}
+            </select>
+          </label>
+          <div className="flex gap-2">
+            <Button type="submit">שמור</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>בטל</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

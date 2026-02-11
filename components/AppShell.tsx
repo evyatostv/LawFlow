@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QuickAdd } from "@/components/QuickAdd";
+import { useAppData } from "@/components/AppDataProvider";
 import clsx from "clsx";
 
 const navItems = [
@@ -24,6 +25,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [search, setSearch] = React.useState("");
   const [navOpen, setNavOpen] = React.useState(false);
+  const [notifyOpen, setNotifyOpen] = React.useState(false);
+  const { tasks, invoices } = useAppData();
+
+  const dueToday = tasks.filter((task) => task.dueDate === new Date().toISOString().slice(0, 10));
+  const unpaid = invoices.filter((invoice) => invoice.status !== "PAID");
 
   React.useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -79,6 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     ? "bg-ink text-white shadow-soft"
                     : "text-ink hover:bg-sand/70"
                 )}
+                onClick={() => setNavOpen(false)}
               >
                 {item.label}
               </Link>
@@ -109,10 +116,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Button>
                 <span className="text-xs text-steel/70 lg:hidden">LawFlow</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="secondary" size="sm">
-                  התראות (2)
+              <div className="relative flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setNotifyOpen((prev) => !prev)}
+                >
+                  התראות ({dueToday.length + unpaid.length})
                 </Button>
+                {notifyOpen ? (
+                  <div className="absolute left-0 top-12 z-20 w-64 rounded-2xl border border-steel/10 bg-white p-4 shadow-soft">
+                    <p className="text-sm font-semibold text-ink">תזכורות מהירות</p>
+                    <div className="mt-2 space-y-2 text-xs text-steel/80">
+                      {dueToday.slice(0, 3).map((task) => (
+                        <div key={task.id}>משימה היום: {task.title}</div>
+                      ))}
+                      {unpaid.slice(0, 3).map((invoice) => (
+                        <div key={invoice.id}>חשבונית פתוחה: {invoice.number}</div>
+                      ))}
+                      {dueToday.length === 0 && unpaid.length === 0 ? (
+                        <div>אין תזכורות כרגע.</div>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
                 <QuickAdd />
               </div>
             </div>

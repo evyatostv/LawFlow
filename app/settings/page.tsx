@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useAppData } from "@/components/AppDataProvider";
 
 const settingsSchema = z.object({
   firmName: z.string().min(2),
@@ -23,6 +24,7 @@ const settingsSchema = z.object({
 type SettingsValues = z.infer<typeof settingsSchema>;
 
 export default function SettingsPage() {
+  const { resetData } = useAppData();
   const {
     register,
     handleSubmit,
@@ -44,6 +46,7 @@ export default function SettingsPage() {
 
   const onSubmit = (values: SettingsValues) => {
     console.log("Settings", values);
+    alert("ההגדרות נשמרו (דמו)");
   };
 
   return (
@@ -100,9 +103,12 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button type="submit">שמור הגדרות</Button>
-          <Button type="button" variant="ghost">בטל</Button>
+          <Button type="button" variant="ghost" onClick={() => alert("בוטל (דמו)")}>בטל</Button>
+          <Button type="button" variant="secondary" onClick={() => resetData()}>
+            איפוס נתונים לדמו
+          </Button>
         </div>
       </form>
     </div>

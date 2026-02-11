@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAppData } from "@/components/AppDataProvider";
 
 const quickAddSchema = z.object({
   type: z.enum(["note", "task", "payment", "document"]),
@@ -17,6 +18,7 @@ type QuickAddValues = z.infer<typeof quickAddSchema>;
 
 export function QuickAdd() {
   const [open, setOpen] = React.useState(false);
+  const { addTask, addNote, addPayment, addDocument } = useAppData();
   const {
     register,
     handleSubmit,
@@ -31,7 +33,37 @@ export function QuickAdd() {
   const type = watch("type");
 
   const onSubmit = (values: QuickAddValues) => {
-    console.log("Quick add", values);
+    if (values.type === "task") {
+      addTask({
+        title: values.title,
+        dueDate: new Date().toISOString().slice(0, 10),
+        priority: "MEDIUM",
+        repeat: undefined,
+      });
+    }
+    if (values.type === "note") {
+      addNote({
+        body: values.title,
+        timestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+      });
+    }
+    if (values.type === "payment") {
+      addPayment({
+        amount: Number(values.amount ?? 0),
+        method: "אשראי",
+        status: "PARTIAL",
+        date: new Date().toISOString().slice(0, 10),
+      });
+    }
+    if (values.type === "document") {
+      addDocument({
+        name: values.title,
+        type: "PDF",
+        clientId: undefined,
+        caseId: undefined,
+        updatedAt: new Date().toISOString().slice(0, 10),
+      });
+    }
     reset();
     setOpen(false);
   };

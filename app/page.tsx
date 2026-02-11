@@ -1,9 +1,13 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/SectionHeader";
-import { clients, events, invoices, tasks } from "@/lib/data";
+import { useAppData } from "@/components/AppDataProvider";
 
 export default function HomePage() {
+  const { clients, events, invoices, tasks } = useAppData();
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -69,7 +73,10 @@ export default function HomePage() {
 
       <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <Card>
-          <SectionHeader title="פעילות לקוחות אחרונה" action={{ label: "כל הפעילות" }} />
+          <SectionHeader
+            title="פעילות לקוחות אחרונה"
+            action={{ label: "כל הפעילות", onClick: () => alert("פתיחת מסך פעילות (דמו)") }}
+          />
           <div className="space-y-3">
             {clients.map((client) => (
               <div key={client.id} className="flex items-center justify-between rounded-xl bg-white/70 px-4 py-3">
@@ -83,7 +90,10 @@ export default function HomePage() {
           </div>
         </Card>
         <Card>
-          <SectionHeader title="תשלומים שלא נסגרו" action={{ label: "הפק דוח" }} />
+          <SectionHeader
+            title="תשלומים שלא נסגרו"
+            action={{ label: "הפק דוח", onClick: () => alert("דוח הופק (דמו)") }}
+          />
           <div className="space-y-3 text-sm">
             {invoices.map((invoice) => (
               <div key={invoice.id} className="flex items-center justify-between">
