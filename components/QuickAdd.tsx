@@ -6,6 +6,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { Combobox } from "@/components/ui/combobox";
 import { createQuickAdd } from "@/app/quick-add/actions";
 
 const quickAddSchema = z.object({
@@ -16,13 +18,19 @@ const quickAddSchema = z.object({
 
 type QuickAddValues = z.infer<typeof quickAddSchema>;
 
-export function QuickAdd() {
-  const [open, setOpen] = React.useState(false);
+export function QuickAdd({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (value: boolean) => void;
+}) {
   const [loading, setLoading] = React.useState(false);
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
     reset,
   } = useForm<QuickAddValues>({
@@ -32,6 +40,11 @@ export function QuickAdd() {
 
   const type = watch("type");
 
+  React.useEffect(() => {
+    register("type");
+    register("amount");
+  }, [register]);
+
   const onSubmit = async (values: QuickAddValues) => {
     setLoading(true);
     const formData = new FormData();
@@ -40,39 +53,47 @@ export function QuickAdd() {
     if (values.amount) formData.append("amount", values.amount);
     await createQuickAdd(formData);
     reset();
-    setOpen(false);
+    onOpenChange(false);
     setLoading(false);
   };
 
   return (
     <div className="relative">
-      <Button id="quick-add-trigger" size="sm" onClick={() => setOpen((v) => !v)}>
+      <Button id="quick-add-trigger" size="sm" onClick={() => onOpenChange(!open)}>
         הוספה מהירה
       </Button>
       {open ? (
-        <div className="absolute left-0 top-12 z-10 w-80 rounded-2xl border border-steel/10 bg-white p-4 shadow-soft">
+        <div className="absolute left-0 top-12 z-50 w-80 rounded-2xl border border-steel/10 bg-white p-4 shadow-soft">
           <form className="flex flex-col gap-3" onSubmit={handleSubmit(onSubmit)}>
-            <label className="text-xs uppercase text-steel/70">סוג</label>
-            <select
-              className="h-10 rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              {...register("type")}
-            >
-              <option value="note">פתק</option>
-              <option value="task">משימה</option>
-              <option value="payment">תשלום</option>
-              <option value="document">מסמך</option>
-            </select>
+            <Combobox
+              label="סוג"
+              items={[
+                { value: "note", label: "פתק" },
+                { value: "task", label: "משימה" },
+                { value: "payment", label: "תשלום" },
+                { value: "document", label: "מסמך" },
+              ]}
+              value={watch("type")}
+              onChange={(value) => setValue("type", value as QuickAddValues["type"])}
+            />
             <Input label="תיאור" placeholder="מה נוסיף?" {...register("title")} />
             {errors.title ? (
               <span className="text-xs text-red-600">{errors.title.message}</span>
             ) : null}
             {type === "payment" ? (
-              <Input label="סכום" placeholder="₪" {...register("amount")} />
+              <CurrencyInput
+                label="סכום"
+                placeholder="₪"
+                value={watch("amount") ?? ""}
+                onValueChange={(next) => {
+                  setValue("amount", next);
+                }}
+              />
             ) : null}
             <div className="flex items-center justify-between">
               <span className="text-xs text-steel/70">⌘/Ctrl + J</span>
               <div className="flex gap-2">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
+                <Button type="button" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
                   ביטול
                 </Button>
                 <Button type="submit" size="sm" disabled={loading}>

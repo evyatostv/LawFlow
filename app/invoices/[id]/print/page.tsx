@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import PrintClient from "./PrintClient";
+import { formatCurrency } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -60,8 +61,8 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
                 <tr key={line.id} className="border-t border-steel/10">
                   <td className="py-2">{line.description}</td>
                   <td className="py-2">{line.quantity}</td>
-                  <td className="py-2">₪{line.unitPrice.toFixed(2)}</td>
-                  <td className="py-2">₪{line.total.toFixed(2)}</td>
+                  <td className="py-2">₪{formatCurrency(line.unitPrice)}</td>
+                  <td className="py-2">₪{formatCurrency(line.total)}</td>
                 </tr>
               ))}
             </tbody>
@@ -72,15 +73,15 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
           <div className="grid grid-cols-3 gap-3 text-sm">
             <div className="rounded-lg bg-sand/60 p-3">
               <p className="text-xs text-steel/70">סה"כ ללא מע"מ</p>
-              <p className="font-semibold">₪{invoice.subtotal.toFixed(2)}</p>
+              <p className="font-semibold">₪{formatCurrency(invoice.subtotal)}</p>
             </div>
             <div className="rounded-lg bg-sand/60 p-3">
               <p className="text-xs text-steel/70">מע"מ ({(invoice.vatRate * 100).toFixed(0)}%)</p>
-              <p className="font-semibold">₪{invoice.vatAmount.toFixed(2)}</p>
+              <p className="font-semibold">₪{formatCurrency(invoice.vatAmount)}</p>
             </div>
             <div className="rounded-lg bg-sand/60 p-3">
               <p className="text-xs text-steel/70">סה"כ לתשלום</p>
-              <p className="font-semibold">₪{invoice.total.toFixed(2)}</p>
+              <p className="font-semibold">₪{formatCurrency(invoice.total)}</p>
             </div>
           </div>
         </div>

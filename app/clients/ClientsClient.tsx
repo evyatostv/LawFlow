@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/Modal";
 import { createClient } from "@/app/clients/actions";
 import { downloadCsv } from "@/lib/csv";
+import { updateSortPreference } from "@/app/preferences/actions";
+import { formatCurrency } from "@/lib/format";
+import { MobileActionBar } from "@/components/MobileActionBar";
 
 type Client = {
   id: string;
@@ -46,7 +49,7 @@ const columns = [
     accessorKey: "name",
     header: "שם לקוח",
     cell: ({ row }: any) => (
-      <Link className="font-semibold text-ink hover:underline" href={"/clients/" + row.original.id}>
+      <Link className="font-semibold text-ink" href={"/clients/" + row.original.id}>
         {row.original.name}
       </Link>
     ),
@@ -66,7 +69,7 @@ const columns = [
   {
     accessorKey: "balance",
     header: "יתרה",
-    cell: ({ row }: any) => `₪${row.original.balance.toLocaleString("he-IL")}`,
+    cell: ({ row }: any) => `₪${formatCurrency(row.original.balance)}`,
   },
   {
     id: "tags",
@@ -81,9 +84,16 @@ const columns = [
   },
 ];
 
-export default function ClientsClient({ clients }: { clients: Client[] }) {
+export default function ClientsClient({
+  clients,
+  initialSorting,
+}: {
+  clients: Client[];
+  initialSorting: { id: string; desc: boolean }[];
+}) {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [form, setForm] = React.useState({
     name: "",
     israeliId: "",
@@ -96,6 +106,7 @@ export default function ClientsClient({ clients }: { clients: Client[] }) {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
+    setError("");
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("israeliId", form.israeliId);
@@ -103,7 +114,12 @@ export default function ClientsClient({ clients }: { clients: Client[] }) {
     formData.append("email", form.email);
     formData.append("address", form.address);
     formData.append("tags", form.tags);
-    await createClient(formData);
+    const res = await createClient(formData);
+    if (!res.ok) {
+      setError(res.message ?? "שגיאה בשמירת לקוח");
+      setLoading(false);
+      return;
+    }
     setOpen(false);
     setLoading(false);
     setForm({ name: "", israeliId: "", phone: "", email: "", address: "", tags: "" });
@@ -148,6 +164,8 @@ export default function ClientsClient({ clients }: { clients: Client[] }) {
         data={clients}
         columns={columns}
         filterPlaceholder={'חיפוש לפי שם, טלפון, ת"ז'}
+        initialSorting={initialSorting}
+        onSortingPersist={(sorting) => updateSortPreference("clients", sorting)}
       />
 
       <Modal open={open} onClose={() => setOpen(false)} title="לקוח חדש">
@@ -158,12 +176,14 @@ export default function ClientsClient({ clients }: { clients: Client[] }) {
           <Input label="אימייל" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <Input label="כתובת" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           <Input label="תגיות (מופרדות בפסיק)" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>בטל</Button>
           </div>
         </form>
       </Modal>
+      <MobileActionBar label="הוסף לקוח" onClick={() => setOpen(true)} />
     </div>
   );
 }

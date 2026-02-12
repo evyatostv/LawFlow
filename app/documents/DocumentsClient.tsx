@@ -5,8 +5,11 @@ import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
+import { updateSortPreference } from "@/app/preferences/actions";
 import { Modal } from "@/components/Modal";
 import { createDocument } from "@/app/documents/actions";
+import { MobileActionBar } from "@/components/MobileActionBar";
 
 type DocumentRow = { id: string; name: string; type: string; updatedAt: Date; url?: string | null };
 
@@ -36,7 +39,15 @@ const columns = [
       />
     ),
   },
-  { accessorKey: "name", header: "מסמך" },
+  {
+    accessorKey: "name",
+    header: "מסמך",
+    cell: ({ row }: any) => (
+      <a className="font-semibold text-ink" href={`/documents/${row.original.id}`}>
+        {row.original.name}
+      </a>
+    ),
+  },
   { accessorKey: "type", header: "סוג" },
   {
     accessorKey: "url",
@@ -62,17 +73,22 @@ export default function DocumentsClient({
   clients,
   cases,
   templates,
+  initialSorting,
 }: {
   documents: DocumentRow[];
   clients: Client[];
   cases: CaseItem[];
   templates: Template[];
+  initialSorting: { id: string; desc: boolean }[];
 }) {
   const [open, setOpen] = React.useState(false);
   const [templateOpen, setTemplateOpen] = React.useState(false);
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(templates[0] ?? null);
+  const [templateClientId, setTemplateClientId] = React.useState("");
+  const [templateCaseId, setTemplateCaseId] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [form, setForm] = React.useState({
     name: "",
     type: "PDF",
@@ -84,6 +100,7 @@ export default function DocumentsClient({
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
+    setError("");
     let url = "";
     if (file) {
       setUploading(true);
@@ -100,7 +117,12 @@ export default function DocumentsClient({
     if (url) formData.append("url", url);
     if (form.clientId) formData.append("clientId", form.clientId);
     if (form.caseId) formData.append("caseId", form.caseId);
-    await createDocument(formData);
+    const res = await createDocument(formData);
+    if (!res.ok) {
+      setError(res.message ?? "שגיאה בהעלאת מסמך");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     setOpen(false);
   };
@@ -139,23 +161,27 @@ export default function DocumentsClient({
         <p className="text-xs text-steel/70">סידור אוטומטי לפי לקוח ותיק עם הרשאות גישה מאובטחות.</p>
       </Card>
 
-      <DataTable data={documents} columns={columns} filterPlaceholder="חיפוש לפי שם מסמך" />
+      <DataTable
+        data={documents}
+        columns={columns}
+        filterPlaceholder="חיפוש לפי שם מסמך"
+        initialSorting={initialSorting}
+        onSortingPersist={(sorting) => updateSortPreference("documents", sorting)}
+      />
 
       <Modal open={open} onClose={() => setOpen(false)} title="מסמך חדש">
         <form className="space-y-3" onSubmit={onSubmit}>
           <Input label="שם מסמך" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <label className="text-xs uppercase text-steel/70">
-            סוג
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-            >
-              <option value="PDF">PDF</option>
-              <option value="IMAGE">Image</option>
-              <option value="DOCX">DOCX</option>
-            </select>
-          </label>
+          <Combobox
+            label="סוג"
+            items={[
+              { value: "PDF", label: "PDF" },
+              { value: "IMAGE", label: "Image" },
+              { value: "DOCX", label: "DOCX" },
+            ]}
+            value={form.type}
+            onChange={(value) => setForm({ ...form, type: value })}
+          />
           <label className="text-xs uppercase text-steel/70">
             קובץ
             <input
@@ -164,32 +190,27 @@ export default function DocumentsClient({
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
           </label>
-          <label className="text-xs uppercase text-steel/70">
-            לקוח
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.clientId}
-              onChange={(e) => setForm({ ...form, clientId: e.target.value })}
-            >
-              <option value="">לא משויך</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>{client.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-xs uppercase text-steel/70">
-            תיק
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.caseId}
-              onChange={(e) => setForm({ ...form, caseId: e.target.value })}
-            >
-              <option value="">לא משויך</option>
-              {cases.map((caseItem) => (
-                <option key={caseItem.id} value={caseItem.id}>{caseItem.caseNumber}</option>
-              ))}
-            </select>
-          </label>
+          <Combobox
+            label="לקוח"
+            placeholder="חיפוש לקוח"
+            items={[{ value: "", label: "לא משויך" }, ...clients.map((client) => ({
+              value: client.id,
+              label: client.name,
+            }))]}
+            value={form.clientId}
+            onChange={(value) => setForm({ ...form, clientId: value })}
+          />
+          <Combobox
+            label="תיק"
+            placeholder="חיפוש תיק"
+            items={[{ value: "", label: "לא משויך" }, ...cases.map((caseItem) => ({
+              value: caseItem.id,
+              label: caseItem.caseNumber,
+            }))]}
+            value={form.caseId}
+            onChange={(value) => setForm({ ...form, caseId: value })}
+          />
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={loading || uploading}>
               {uploading ? "מעלה..." : loading ? "שומר..." : "שמור"}
@@ -200,26 +221,67 @@ export default function DocumentsClient({
       </Modal>
 
       <Modal open={templateOpen} onClose={() => setTemplateOpen(false)} title="תבניות">
-        <div className="space-y-3">
-          <label className="text-xs uppercase text-steel/70">
-            בחר תבנית
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={selectedTemplate?.id}
-              onChange={(e) =>
-                setSelectedTemplate(templates.find((tpl) => tpl.id === e.target.value) ?? null)
-              }
-            >
-              {templates.map((tpl) => (
-                <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
-              ))}
-            </select>
-          </label>
+        <div className="space-y-4">
+          <Combobox
+            label="בחר תבנית"
+            items={templates.map((tpl) => ({ value: tpl.id, label: tpl.name }))}
+            value={selectedTemplate?.id ?? ""}
+            onChange={(value) =>
+              setSelectedTemplate(templates.find((tpl) => tpl.id === value) ?? null)
+            }
+          />
+          <Combobox
+            label="לקוח לתצוגה מקדימה"
+            placeholder="חיפוש לקוח"
+            items={clients.map((client) => ({ value: client.id, label: client.name }))}
+            value={templateClientId}
+            onChange={setTemplateClientId}
+          />
+          <Combobox
+            label="תיק לתצוגה מקדימה"
+            placeholder="חיפוש תיק"
+            items={cases.map((caseItem) => ({ value: caseItem.id, label: caseItem.caseNumber }))}
+            value={templateCaseId}
+            onChange={setTemplateCaseId}
+          />
           <div className="rounded-xl border border-steel/10 bg-white/80 p-3 text-xs text-steel/70">
             {selectedTemplate?.body ?? "אין תבנית זמינה"}
           </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={!selectedTemplate}
+              onClick={() => {
+                if (!selectedTemplate) return;
+                const params = new URLSearchParams();
+                params.set("templateId", selectedTemplate.id);
+                if (templateClientId) params.set("clientId", templateClientId);
+                if (templateCaseId) params.set("caseId", templateCaseId);
+                window.open(`/templates/preview?${params.toString()}`, "_blank");
+              }}
+            >
+              תצוגה מקדימה
+            </Button>
+            <Button
+              size="sm"
+              disabled={!selectedTemplate}
+              onClick={() => {
+                if (!selectedTemplate) return;
+                const params = new URLSearchParams();
+                params.set("templateId", selectedTemplate.id);
+                if (templateClientId) params.set("clientId", templateClientId);
+                if (templateCaseId) params.set("caseId", templateCaseId);
+                params.set("export", "1");
+                window.open(`/templates/preview?${params.toString()}`, "_blank");
+              }}
+            >
+              ייצוא ל-PDF
+            </Button>
+          </div>
         </div>
       </Modal>
+      <MobileActionBar label="העלה מסמך" onClick={() => setOpen(true)} />
     </div>
   );
 }

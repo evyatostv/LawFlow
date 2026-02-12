@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import PrintClient from "@/app/invoices/[id]/print/PrintClient";
+import { formatCurrency } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export default async function ReceiptPrintPage({ params }: { params: { id: strin
           </div>
           <div className="rounded-lg bg-sand/60 p-3">
             <p className="text-xs text-steel/70">סכום הקבלה</p>
-            <p className="font-semibold">₪{receipt.amount.toFixed(2)}</p>
+            <p className="font-semibold">₪{formatCurrency(receipt.amount)}</p>
           </div>
         </div>
 

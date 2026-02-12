@@ -283,12 +283,17 @@ model Settings {
   logoUrl                String?
   signatureUrl           String?
   invoicePrefix          String
+  invoiceNumberResetYearly Boolean @default(true)
   enableAllocationNumber Boolean  @default(false)
   allocationThreshold    Float    @default(0)
   notificationRules      String
   backupSchedule         String
   sessionTimeoutMinutes  Int
   invoiceFooter          String?
+  language               String   @default("he")
+  adminEmail             String?
+  sortPreferences        Json?
+  recentLocations        Json?
   updatedAt              DateTime @updatedAt
 }
 

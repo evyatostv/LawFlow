@@ -39,12 +39,13 @@ export async function createReceipt(formData: FormData) {
   const year = new Date().getFullYear();
   const settings = await prisma.settings.findFirst();
   const prefix = `${settings?.invoicePrefix || "LF"}-R`;
+  const counterYear = settings?.invoiceNumberResetYearly === false ? 0 : year;
 
   const receipt = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const counter = await tx.invoiceCounter.upsert({
-      where: { year_prefix: { year, prefix } },
+      where: { year_prefix: { year: counterYear, prefix } },
       update: { current: { increment: 1 } },
-      create: { year, prefix, current: 1 },
+      create: { year: counterYear, prefix, current: 1 },
     });
 
     const number = formatReceiptNumber(prefix, year, counter.current);

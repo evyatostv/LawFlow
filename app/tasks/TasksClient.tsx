@@ -5,8 +5,11 @@ import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
+import { DatePicker } from "@/components/ui/date-time-picker";
 import { Modal } from "@/components/Modal";
 import { createTask } from "@/app/tasks/actions";
+import { MobileActionBar } from "@/components/MobileActionBar";
 
 type Task = {
   id: string;
@@ -69,6 +72,7 @@ export default function TasksClient({
 }) {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [form, setForm] = React.useState({
     title: "",
     dueDate: new Date().toISOString().slice(0, 10),
@@ -81,6 +85,7 @@ export default function TasksClient({
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
+    setError("");
     const formData = new FormData();
     formData.append("title", form.title);
     formData.append("dueDate", form.dueDate);
@@ -88,7 +93,12 @@ export default function TasksClient({
     if (form.repeat) formData.append("repeat", form.repeat);
     if (form.clientId) formData.append("clientId", form.clientId);
     if (form.caseId) formData.append("caseId", form.caseId);
-    await createTask(formData);
+    const res = await createTask(formData);
+    if (!res.ok) {
+      setError(res.message ?? "שגיאה בשמירת משימה");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     setOpen(false);
   };
@@ -113,53 +123,47 @@ export default function TasksClient({
       <Modal open={open} onClose={() => setOpen(false)} title="משימה חדשה">
         <form className="space-y-3" onSubmit={onSubmit}>
           <Input label="כותרת" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          <Input label="תאריך יעד" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
-          <label className="text-xs uppercase text-steel/70">
-            דחיפות
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.priority}
-              onChange={(e) => setForm({ ...form, priority: e.target.value })}
-            >
-              <option value="LOW">נמוכה</option>
-              <option value="MEDIUM">בינונית</option>
-              <option value="HIGH">גבוהה</option>
-              <option value="URGENT">דחופה</option>
-            </select>
-          </label>
+          <DatePicker label="תאריך יעד" value={form.dueDate} onChange={(value) => setForm({ ...form, dueDate: value })} />
+          <Combobox
+            label="דחיפות"
+            items={[
+              { value: "LOW", label: "נמוכה" },
+              { value: "MEDIUM", label: "בינונית" },
+              { value: "HIGH", label: "גבוהה" },
+              { value: "URGENT", label: "דחופה" },
+            ]}
+            value={form.priority}
+            onChange={(value) => setForm({ ...form, priority: value })}
+          />
           <Input label="חזרה" value={form.repeat} onChange={(e) => setForm({ ...form, repeat: e.target.value })} />
-          <label className="text-xs uppercase text-steel/70">
-            לקוח
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.clientId}
-              onChange={(e) => setForm({ ...form, clientId: e.target.value })}
-            >
-              <option value="">לא משויך</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>{client.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-xs uppercase text-steel/70">
-            תיק
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.caseId}
-              onChange={(e) => setForm({ ...form, caseId: e.target.value })}
-            >
-              <option value="">לא משויך</option>
-              {cases.map((caseItem) => (
-                <option key={caseItem.id} value={caseItem.id}>{caseItem.caseNumber}</option>
-              ))}
-            </select>
-          </label>
+          <Combobox
+            label="לקוח"
+            placeholder="חיפוש לקוח"
+            items={[{ value: "", label: "לא משויך" }, ...clients.map((client) => ({
+              value: client.id,
+              label: client.name,
+            }))]}
+            value={form.clientId}
+            onChange={(value) => setForm({ ...form, clientId: value })}
+          />
+          <Combobox
+            label="תיק"
+            placeholder="חיפוש תיק"
+            items={[{ value: "", label: "לא משויך" }, ...cases.map((caseItem) => ({
+              value: caseItem.id,
+              label: caseItem.caseNumber,
+            }))]}
+            value={form.caseId}
+            onChange={(value) => setForm({ ...form, caseId: value })}
+          />
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>בטל</Button>
           </div>
         </form>
       </Modal>
+      <MobileActionBar label="צור משימה" onClick={() => setOpen(true)} />
     </div>
   );
 }

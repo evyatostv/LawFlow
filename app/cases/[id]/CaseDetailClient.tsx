@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { DatePicker, DateTimePicker } from "@/components/ui/date-time-picker";
 import { Modal } from "@/components/Modal";
 import { SectionHeader } from "@/components/SectionHeader";
 import { createNote } from "@/app/notes/actions";
@@ -12,6 +14,9 @@ import { createTask } from "@/app/tasks/actions";
 import { createEvent } from "@/app/calendar/actions";
 import { createInvoice } from "@/app/billing/actions";
 import { createDocument } from "@/app/documents/actions";
+import { updateCase, deleteCase } from "@/app/cases/actions";
+import { Combobox } from "@/components/ui/combobox";
+import { MobileActionBar } from "@/components/MobileActionBar";
 
 type CaseDetail = {
   id: string;
@@ -19,6 +24,7 @@ type CaseDetail = {
   court: string;
   opposingParty: string;
   status: string;
+  description?: string | null;
   clientId: string;
   tasks: { id: string; title: string; dueDate: Date }[];
   events: { id: string; title: string; startAt: Date }[];
@@ -27,22 +33,63 @@ type CaseDetail = {
   invoices: { id: string; status: string }[];
 };
 
-export default function CaseDetailClient({ caseItem }: { caseItem: CaseDetail }) {
+type Client = { id: string; name: string };
+
+export default function CaseDetailClient({ caseItem, clients }: { caseItem: CaseDetail; clients: Client[] }) {
   const [modal, setModal] = React.useState<
     null | "note" | "task" | "event" | "invoice" | "document"
   >(null);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [noteBody, setNoteBody] = React.useState("");
   const [taskTitle, setTaskTitle] = React.useState("");
   const [eventTitle, setEventTitle] = React.useState("");
   const [invoiceTotal, setInvoiceTotal] = React.useState("");
   const [docName, setDocName] = React.useState("");
+  const [taskDueDate, setTaskDueDate] = React.useState(new Date().toISOString().slice(0, 10));
+  const [eventStart, setEventStart] = React.useState(new Date().toISOString().slice(0, 16));
+  const [eventEnd, setEventEnd] = React.useState(new Date().toISOString().slice(0, 16));
+  const [caseForm, setCaseForm] = React.useState({
+    caseNumber: caseItem.caseNumber,
+    court: caseItem.court,
+    opposingParty: caseItem.opposingParty,
+    status: caseItem.status,
+    description: caseItem.description ?? "",
+    clientId: caseItem.clientId,
+  });
 
   const submit = async (handler: () => Promise<unknown>) => {
     setLoading(true);
     await handler();
     setLoading(false);
     setModal(null);
+  };
+
+  const onUpdateCase = async () => {
+    setLoading(true);
+    setError("");
+    const formData = new FormData();
+    formData.append("id", caseItem.id);
+    formData.append("caseNumber", caseForm.caseNumber);
+    formData.append("court", caseForm.court);
+    formData.append("opposingParty", caseForm.opposingParty);
+    formData.append("status", caseForm.status);
+    formData.append("clientId", caseForm.clientId);
+    if (caseForm.description) formData.append("description", caseForm.description);
+    const res = await updateCase(formData);
+    if (!res.ok) setError(res.message ?? "שגיאה בעדכון");
+    setLoading(false);
+  };
+
+  const onDeleteCase = async () => {
+    setLoading(true);
+    const res = await deleteCase(caseItem.id);
+    if (!res.ok) {
+      setError(res.message ?? "שגיאה במחיקה");
+      setLoading(false);
+      return;
+    }
+    window.location.href = "/cases";
   };
 
   return (
@@ -56,10 +103,39 @@ export default function CaseDetailClient({ caseItem }: { caseItem: CaseDetail })
       </div>
 
       <Card>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 text-sm">
-          <div>
-            <p className="text-xs text-steel/70">צד נגדי</p>
-            <p className="font-semibold">{caseItem.opposingParty}</p>
+        <form
+          className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 text-sm"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onUpdateCase();
+          }}
+        >
+          <Input label="מספר תיק" value={caseForm.caseNumber} onChange={(e) => setCaseForm({ ...caseForm, caseNumber: e.target.value })} />
+          <Input label="בית משפט" value={caseForm.court} onChange={(e) => setCaseForm({ ...caseForm, court: e.target.value })} />
+          <Input label="צד נגדי" value={caseForm.opposingParty} onChange={(e) => setCaseForm({ ...caseForm, opposingParty: e.target.value })} />
+          <Combobox
+            label="סטטוס"
+            items={[
+              { value: "OPEN", label: "פתוח" },
+              { value: "PENDING", label: "ממתין" },
+              { value: "CLOSED", label: "סגור" },
+            ]}
+            value={caseForm.status}
+            onChange={(value) => setCaseForm({ ...caseForm, status: value })}
+          />
+          <Combobox
+            label="לקוח"
+            items={clients.map((client) => ({ value: client.id, label: client.name }))}
+            value={caseForm.clientId}
+            onChange={(value) => setCaseForm({ ...caseForm, clientId: value })}
+          />
+          <Input label="תיאור" value={caseForm.description} onChange={(e) => setCaseForm({ ...caseForm, description: e.target.value })} />
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" size="sm" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
+            <Button type="button" size="sm" variant="ghost" onClick={onDeleteCase} disabled={loading}>
+              מחק תיק
+            </Button>
           </div>
           <div>
             <p className="text-xs text-steel/70">פעולות מהירות</p>
@@ -71,7 +147,7 @@ export default function CaseDetailClient({ caseItem }: { caseItem: CaseDetail })
               <Button size="sm" variant="ghost" onClick={() => setModal("document")}>העלאת מסמך</Button>
             </div>
           </div>
-        </div>
+        </form>
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
@@ -139,15 +215,17 @@ export default function CaseDetailClient({ caseItem }: { caseItem: CaseDetail })
             e.preventDefault();
             const formData = new FormData();
             formData.append("title", taskTitle);
-            formData.append("dueDate", new Date().toISOString().slice(0, 10));
+            formData.append("dueDate", taskDueDate);
             formData.append("priority", "MEDIUM");
             formData.append("caseId", caseItem.id);
             formData.append("clientId", caseItem.clientId);
             submit(() => createTask(formData));
             setTaskTitle("");
+            setTaskDueDate(new Date().toISOString().slice(0, 10));
           }}
         >
           <Input label="כותרת" value={taskTitle} onChange={(e) => setTaskTitle(e.target.value)} />
+          <DatePicker label="תאריך יעד" value={taskDueDate} onChange={setTaskDueDate} />
           <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
         </form>
       </Modal>
@@ -159,16 +237,20 @@ export default function CaseDetailClient({ caseItem }: { caseItem: CaseDetail })
             e.preventDefault();
             const formData = new FormData();
             formData.append("title", eventTitle);
-            formData.append("startAt", new Date().toISOString());
-            formData.append("endAt", new Date().toISOString());
+            formData.append("startAt", eventStart);
+            formData.append("endAt", eventEnd);
             formData.append("type", "HEARING");
             formData.append("caseId", caseItem.id);
             formData.append("clientId", caseItem.clientId);
             submit(() => createEvent(formData));
             setEventTitle("");
+            setEventStart(new Date().toISOString().slice(0, 16));
+            setEventEnd(new Date().toISOString().slice(0, 16));
           }}
         >
           <Input label="כותרת" value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} />
+          <DateTimePicker label="התחלה" value={eventStart} onChange={setEventStart} />
+          <DateTimePicker label="סיום" value={eventEnd} onChange={setEventEnd} />
           <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
         </form>
       </Modal>
@@ -189,7 +271,7 @@ export default function CaseDetailClient({ caseItem }: { caseItem: CaseDetail })
             setInvoiceTotal("");
           }}
         >
-          <Input label="סכום" type="number" value={invoiceTotal} onChange={(e) => setInvoiceTotal(e.target.value)} />
+          <CurrencyInput label="סכום" value={invoiceTotal} onValueChange={(value) => setInvoiceTotal(value)} />
           <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
         </form>
       </Modal>
@@ -212,6 +294,7 @@ export default function CaseDetailClient({ caseItem }: { caseItem: CaseDetail })
           <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
         </form>
       </Modal>
+      <MobileActionBar label={loading ? "שומר..." : "שמור תיק"} onClick={onUpdateCase} disabled={loading} />
     </div>
   );
 }

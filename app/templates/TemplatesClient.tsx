@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/Modal";
 import { createTemplate } from "@/app/templates/actions";
+import { MobileActionBar } from "@/components/MobileActionBar";
 
 type Template = { id: string; name: string; category: string; body: string };
 
@@ -36,16 +37,23 @@ const columns = [
 export default function TemplatesClient({ templates }: { templates: Template[] }) {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [form, setForm] = React.useState({ name: "", category: "", body: "" });
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
+    setError("");
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("category", form.category);
     formData.append("body", form.body);
-    await createTemplate(formData);
+    const res = await createTemplate(formData);
+    if (!res.ok) {
+      setError(res.message ?? "שגיאה בשמירת תבנית");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     setOpen(false);
   };
@@ -74,12 +82,14 @@ export default function TemplatesClient({ templates }: { templates: Template[] }
               onChange={(e) => setForm({ ...form, body: e.target.value })}
             />
           </label>
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>בטל</Button>
           </div>
         </form>
       </Modal>
+      <MobileActionBar label="תבנית חדשה" onClick={() => setOpen(true)} />
     </div>
   );
 }

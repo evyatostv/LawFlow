@@ -6,8 +6,10 @@ import { DataTable } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import { Modal } from "@/components/Modal";
 import { createCase } from "@/app/cases/actions";
+import { MobileActionBar } from "@/components/MobileActionBar";
 
 type CaseItem = {
   id: string;
@@ -44,7 +46,7 @@ const columns = [
     accessorKey: "caseNumber",
     header: "מספר תיק",
     cell: ({ row }: any) => (
-      <Link className="font-semibold text-ink hover:underline" href={"/cases/" + row.original.id}>
+      <Link className="font-semibold text-ink" href={"/cases/" + row.original.id}>
         {row.original.caseNumber}
       </Link>
     ),
@@ -61,6 +63,7 @@ const columns = [
 export default function CasesClient({ cases, clients }: { cases: CaseItem[]; clients: Client[] }) {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [form, setForm] = React.useState({
     clientId: clients[0]?.id ?? "",
     caseNumber: "",
@@ -72,13 +75,19 @@ export default function CasesClient({ cases, clients }: { cases: CaseItem[]; cli
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
+    setError("");
     const formData = new FormData();
     formData.append("clientId", form.clientId);
     formData.append("caseNumber", form.caseNumber);
     formData.append("court", form.court);
     formData.append("opposingParty", form.opposingParty);
     formData.append("status", form.status);
-    await createCase(formData);
+    const res = await createCase(formData);
+    if (!res.ok) {
+      setError(res.message ?? "שגיאה בשמירת תיק");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     setOpen(false);
   };
@@ -102,37 +111,31 @@ export default function CasesClient({ cases, clients }: { cases: CaseItem[]; cli
           <Input label="מספר תיק" value={form.caseNumber} onChange={(e) => setForm({ ...form, caseNumber: e.target.value })} />
           <Input label="בית משפט" value={form.court} onChange={(e) => setForm({ ...form, court: e.target.value })} />
           <Input label="צד נגדי" value={form.opposingParty} onChange={(e) => setForm({ ...form, opposingParty: e.target.value })} />
-          <label className="text-xs uppercase text-steel/70">
-            סטטוס
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
-            >
-              <option value="OPEN">פתוח</option>
-              <option value="PENDING">ממתין</option>
-              <option value="CLOSED">סגור</option>
-            </select>
-          </label>
-          <label className="text-xs uppercase text-steel/70">
-            לקוח
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.clientId}
-              onChange={(e) => setForm({ ...form, clientId: e.target.value })}
-            >
-              {clients.length === 0 ? <option value="">אין לקוחות</option> : null}
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>{client.name}</option>
-              ))}
-            </select>
-          </label>
+          <Combobox
+            label="סטטוס"
+            items={[
+              { value: "OPEN", label: "פתוח" },
+              { value: "PENDING", label: "ממתין" },
+              { value: "CLOSED", label: "סגור" },
+            ]}
+            value={form.status}
+            onChange={(value) => setForm({ ...form, status: value })}
+          />
+          <Combobox
+            label="לקוח"
+            placeholder="חיפוש לקוח"
+            items={clients.map((client) => ({ value: client.id, label: client.name }))}
+            value={form.clientId}
+            onChange={(value) => setForm({ ...form, clientId: value })}
+          />
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>בטל</Button>
           </div>
         </form>
       </Modal>
+      <MobileActionBar label="פתח תיק" onClick={() => setOpen(true)} disabled={clients.length === 0} />
     </div>
   );
 }

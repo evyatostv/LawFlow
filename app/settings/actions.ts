@@ -14,12 +14,15 @@ const schema = z.object({
   logoUrl: z.string().optional(),
   signatureUrl: z.string().optional(),
   invoicePrefix: z.string().min(2),
+  invoiceNumberResetYearly: z.boolean(),
   enableAllocationNumber: z.boolean(),
   allocationThreshold: z.coerce.number().min(0),
   notificationRules: z.string().min(2),
   backupSchedule: z.string().min(2),
   sessionTimeoutMinutes: z.coerce.number().min(5),
   invoiceFooter: z.string().optional(),
+  language: z.enum(["he", "en"]),
+  adminEmail: z.string().email().optional(),
 });
 
 export async function updateSettings(formData: FormData) {
@@ -32,12 +35,15 @@ export async function updateSettings(formData: FormData) {
     logoUrl: formData.get("logoUrl") || undefined,
     signatureUrl: formData.get("signatureUrl") || undefined,
     invoicePrefix: formData.get("invoicePrefix"),
+    invoiceNumberResetYearly: formData.get("invoiceNumberResetYearly") === "on",
     enableAllocationNumber: formData.get("enableAllocationNumber") === "on",
     allocationThreshold: formData.get("allocationThreshold"),
     notificationRules: formData.get("notificationRules"),
     backupSchedule: formData.get("backupSchedule"),
     sessionTimeoutMinutes: formData.get("sessionTimeoutMinutes"),
     invoiceFooter: formData.get("invoiceFooter") || undefined,
+    language: (formData.get("language") as "he" | "en") ?? "he",
+    adminEmail: (formData.get("adminEmail") as string) || undefined,
   });
 
   if (!parsed.success) {

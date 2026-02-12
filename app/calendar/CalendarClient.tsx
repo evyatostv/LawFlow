@@ -5,8 +5,13 @@ import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { Combobox } from "@/components/ui/combobox";
 import { Modal } from "@/components/Modal";
 import { createEvent } from "@/app/calendar/actions";
+import { formatDateTime } from "@/lib/format";
+import { updateSortPreference } from "@/app/preferences/actions";
+import { MobileActionBar } from "@/components/MobileActionBar";
 
 type EventItem = {
   id: string;
@@ -41,16 +46,24 @@ const columns = [
       />
     ),
   },
-  { accessorKey: "title", header: "אירוע" },
+  {
+    accessorKey: "title",
+    header: "אירוע",
+    cell: ({ row }: any) => (
+      <a className="font-semibold text-ink" href={`/calendar/${row.original.id}`}>
+        {row.original.title}
+      </a>
+    ),
+  },
   {
     accessorKey: "startAt",
     header: "התחלה",
-    cell: ({ row }: any) => new Date(row.original.startAt).toISOString().slice(0, 16).replace("T", " "),
+    cell: ({ row }: any) => formatDateTime(row.original.startAt),
   },
   {
     accessorKey: "endAt",
     header: "סיום",
-    cell: ({ row }: any) => new Date(row.original.endAt).toISOString().slice(0, 16).replace("T", " "),
+    cell: ({ row }: any) => formatDateTime(row.original.endAt),
   },
   {
     accessorKey: "type",
@@ -64,14 +77,19 @@ export default function CalendarClient({
   events,
   clients,
   cases,
+  recentLocations,
+  initialSorting,
 }: {
   events: EventItem[];
   clients: Client[];
   cases: CaseItem[];
+  recentLocations: string[];
+  initialSorting: { id: string; desc: boolean }[];
 }) {
   const [view, setView] = React.useState<"day" | "week">("day");
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [form, setForm] = React.useState({
     title: "",
     startAt: new Date().toISOString().slice(0, 16),
@@ -85,6 +103,7 @@ export default function CalendarClient({
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
+    setError("");
     const formData = new FormData();
     formData.append("title", form.title);
     formData.append("startAt", form.startAt);
@@ -93,7 +112,12 @@ export default function CalendarClient({
     formData.append("location", form.location);
     if (form.clientId) formData.append("clientId", form.clientId);
     if (form.caseId) formData.append("caseId", form.caseId);
-    await createEvent(formData);
+    const res = await createEvent(formData);
+    if (!res.ok) {
+      setError(res.message ?? "שגיאה ביצירת אירוע");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     setOpen(false);
   };
@@ -129,7 +153,7 @@ export default function CalendarClient({
                   <p className="text-xs text-steel/70">{eventItem.location}</p>
                 </div>
                 <span className="text-xs text-steel/70">
-                  {new Date(eventItem.startAt).toISOString().slice(0, 16).replace("T", " ")}
+                  {formatDateTime(eventItem.startAt)}
                 </span>
               </div>
             ))}
@@ -145,57 +169,64 @@ export default function CalendarClient({
         </div>
       </div>
 
-      <DataTable data={events} columns={columns} filterPlaceholder="חיפוש לפי אירוע או מיקום" />
+      <DataTable
+        data={events}
+        columns={columns}
+        filterPlaceholder="חיפוש לפי אירוע או מיקום"
+        initialSorting={initialSorting}
+        onSortingPersist={(sorting) => updateSortPreference("events", sorting)}
+      />
 
       <Modal open={open} onClose={() => setOpen(false)} title="אירוע חדש">
         <form className="space-y-3" onSubmit={onSubmit}>
           <Input label="כותרת" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-          <Input label="התחלה" type="datetime-local" value={form.startAt} onChange={(e) => setForm({ ...form, startAt: e.target.value })} />
-          <Input label="סיום" type="datetime-local" value={form.endAt} onChange={(e) => setForm({ ...form, endAt: e.target.value })} />
-          <Input label="מיקום" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-          <label className="text-xs uppercase text-steel/70">
-            סוג
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-            >
-              <option value="HEARING">דיון</option>
-              <option value="MEETING">פגישה</option>
-            </select>
-          </label>
-          <label className="text-xs uppercase text-steel/70">
-            לקוח
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.clientId}
-              onChange={(e) => setForm({ ...form, clientId: e.target.value })}
-            >
-              <option value="">לא משויך</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>{client.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-xs uppercase text-steel/70">
-            תיק
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.caseId}
-              onChange={(e) => setForm({ ...form, caseId: e.target.value })}
-            >
-              <option value="">לא משויך</option>
-              {cases.map((caseItem) => (
-                <option key={caseItem.id} value={caseItem.id}>{caseItem.caseNumber}</option>
-              ))}
-            </select>
-          </label>
+          <DateTimePicker label="התחלה" value={form.startAt} onChange={(value) => setForm({ ...form, startAt: value })} />
+          <DateTimePicker label="סיום" value={form.endAt} onChange={(value) => setForm({ ...form, endAt: value })} />
+          <Combobox
+            label="מיקום"
+            placeholder="התחל להקליד..."
+            items={recentLocations.map((loc) => ({ value: loc, label: loc }))}
+            value={form.location}
+            onChange={(value) => setForm({ ...form, location: value })}
+            allowCustomValue
+          />
+          <Combobox
+            label="סוג"
+            items={[
+              { value: "HEARING", label: "דיון" },
+              { value: "MEETING", label: "פגישה" },
+            ]}
+            value={form.type}
+            onChange={(value) => setForm({ ...form, type: value })}
+          />
+          <Combobox
+            label="לקוח"
+            placeholder="חיפוש לקוח"
+            items={[{ value: "", label: "לא משויך" }, ...clients.map((client) => ({
+              value: client.id,
+              label: client.name,
+            }))]}
+            value={form.clientId}
+            onChange={(value) => setForm({ ...form, clientId: value })}
+          />
+          <Combobox
+            label="תיק"
+            placeholder="חיפוש תיק"
+            items={[{ value: "", label: "לא משויך" }, ...cases.map((caseItem) => ({
+              value: caseItem.id,
+              label: caseItem.caseNumber,
+            }))]}
+            value={form.caseId}
+            onChange={(value) => setForm({ ...form, caseId: value })}
+          />
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>בטל</Button>
           </div>
         </form>
       </Modal>
+      <MobileActionBar label="אירוע חדש" onClick={() => setOpen(true)} />
     </div>
   );
 }

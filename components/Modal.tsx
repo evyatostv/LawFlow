@@ -17,7 +17,7 @@ export function Modal({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <button
         type="button"
         aria-label="סגירה"
@@ -27,7 +27,9 @@ export function Modal({
       <div
         className={clsx(
           "relative z-10 w-full max-w-lg rounded-2xl border border-steel/10 bg-white p-6 shadow-soft",
-          "max-h-[90vh] overflow-y-auto"
+          "max-h-[90vh] overflow-y-auto",
+          "sm:rounded-2xl sm:max-w-lg",
+          "max-sm:h-full max-sm:max-h-full max-sm:rounded-none max-sm:p-5"
         )}
       >
         <div className="mb-4 flex items-center justify-between">

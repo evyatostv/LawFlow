@@ -18,6 +18,7 @@ const navItems = [
   { href: "/templates", label: "תבניות" },
   { href: "/billing", label: "חיובים" },
   { href: "/communications", label: "תקשורת" },
+  { href: "/help", label: "עזרה" },
   { href: "/settings", label: "הגדרות" },
 ];
 
@@ -28,6 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [search, setSearch] = React.useState("");
   const [navOpen, setNavOpen] = React.useState(false);
   const [notifyOpen, setNotifyOpen] = React.useState(false);
+  const [quickAddOpen, setQuickAddOpen] = React.useState(false);
   const [summary, setSummary] = React.useState<Summary>({ dueToday: 0, unpaid: 0 });
 
   React.useEffect(() => {
@@ -72,20 +74,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             aria-label="סגירת תפריט"
-            className="fixed inset-0 z-20 bg-ink/40 lg:hidden"
+            className="fixed inset-0 z-40 bg-ink/40 lg:hidden"
             onClick={() => setNavOpen(false)}
           />
         ) : null}
         <aside
           className={clsx(
-            "z-30 border-l border-steel/10 bg-white/70 p-6",
-            "fixed inset-y-0 right-0 w-72 translate-x-full transition lg:static lg:translate-x-0",
+            "z-50 border-l border-steel/10 bg-white/90 p-6",
+            "fixed inset-0 translate-x-full transition lg:static lg:translate-x-0",
+            "lg:inset-y-0 lg:right-0 lg:w-72",
             navOpen ? "translate-x-0" : ""
           )}
         >
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-ink">LawFlow</h1>
-            <p className="text-xs text-steel/70">ניהול משרד חכם ורגוע</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-ink">LawFlow</h1>
+                <p className="text-xs text-steel/70">ניהול משרד חכם ורגוע</p>
+              </div>
+              <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setNavOpen(false)}>
+                סגור
+              </Button>
+            </div>
           </div>
           <nav className="flex flex-col gap-2">
             {navItems.map((item) => (
@@ -96,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   "rounded-xl px-4 py-2 text-sm transition",
                   pathname === item.href
                     ? "bg-ink text-white shadow-soft"
-                    : "text-ink hover:bg-sand/70"
+                    : "text-ink"
                 )}
                 onClick={() => setNavOpen(false)}
               >
@@ -104,16 +114,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="mt-8 rounded-2xl border border-steel/10 bg-white/80 p-4 text-xs text-steel/80">
-            <p className="mb-2 font-semibold text-ink">אבטחה</p>
-            <ul className="space-y-1">
-              <li>2FA פעיל</li>
-              <li>הצפנה במנוחה</li>
-              <li>גיבוי יומי אוטומטי</li>
-              <li>Audit Log בפעולה</li>
-              <li>תפקיד יחיד: משתמש סולו</li>
-            </ul>
-          </div>
         </aside>
         <main className="flex flex-1 flex-col">
           <header className="flex flex-col gap-4 border-b border-steel/10 bg-white/70 px-4 py-4 sm:px-6 lg:px-8">
@@ -133,12 +133,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => setNotifyOpen((prev) => !prev)}
+                  onClick={() => {
+                    setNotifyOpen((prev) => !prev);
+                    setQuickAddOpen(false);
+                  }}
                 >
                   התראות ({summary.dueToday + summary.unpaid})
                 </Button>
                 {notifyOpen ? (
-                  <div className="absolute left-0 top-12 z-20 w-64 rounded-2xl border border-steel/10 bg-white p-4 shadow-soft">
+                  <div className="absolute left-0 top-12 z-40 w-64 rounded-2xl border border-steel/10 bg-white p-4 shadow-soft">
                     <p className="text-sm font-semibold text-ink">תזכורות מהירות</p>
                     <div className="mt-2 space-y-2 text-xs text-steel/80">
                       <div>משימות להיום: {summary.dueToday}</div>
@@ -146,7 +149,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
                   </div>
                 ) : null}
-                <QuickAdd />
+                <QuickAdd
+                  open={quickAddOpen}
+                  onOpenChange={(next) => {
+                    setQuickAddOpen(next);
+                    if (next) setNotifyOpen(false);
+                  }}
+                />
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-4">
@@ -161,25 +170,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="text-xs text-steel/70">⌘/Ctrl + K</span>
             </div>
           </header>
-          <div className="flex-1 px-4 py-6 pb-20 sm:px-6 lg:px-8 lg:pb-6">{children}</div>
+          <div className="flex-1 px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:pb-6">{children}</div>
         </main>
       </div>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-steel/10 bg-white/90 backdrop-blur lg:hidden">
-        <div className="grid grid-cols-5 gap-1 px-2 py-2 text-xs">
-          {navItems.slice(0, 5).map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={clsx(
-                "rounded-lg px-2 py-2 text-center",
-                pathname === item.href ? "bg-ink text-white" : "text-ink"
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </nav>
+      <div className="lg:hidden" />
     </div>
   );
 }

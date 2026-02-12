@@ -42,7 +42,64 @@ export async function createEvent(formData: FormData) {
     },
   });
 
+  if (parsed.data.location) {
+    const settings = await prisma.settings.findFirst();
+    if (settings) {
+      const current = Array.isArray(settings.recentLocations)
+        ? (settings.recentLocations as string[])
+        : [];
+      const next = [parsed.data.location, ...current.filter((loc) => loc !== parsed.data.location)].slice(0, 8);
+      await prisma.settings.update({
+        where: { id: settings.id },
+        data: { recentLocations: next },
+      });
+    }
+  }
+
   await logAudit("event.create", created.id);
+  revalidatePath("/calendar");
+  return { ok: true };
+}
+
+const updateSchema = schema.extend({ id: z.string().min(1) });
+
+export async function updateEvent(formData: FormData) {
+  const parsed = updateSchema.safeParse({
+    id: formData.get("id"),
+    title: formData.get("title"),
+    startAt: formData.get("startAt"),
+    endAt: formData.get("endAt"),
+    type: formData.get("type"),
+    location: formData.get("location") || undefined,
+    clientId: formData.get("clientId") || undefined,
+    caseId: formData.get("caseId") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { ok: false, message: "נתונים לא תקינים" };
+  }
+
+  const updated = await prisma.event.update({
+    where: { id: parsed.data.id },
+    data: {
+      title: parsed.data.title,
+      startAt: new Date(parsed.data.startAt),
+      endAt: new Date(parsed.data.endAt),
+      type: parsed.data.type,
+      location: parsed.data.location,
+      clientId: parsed.data.clientId,
+      caseId: parsed.data.caseId,
+    },
+  });
+  await logAudit("event.update", updated.id);
+  revalidatePath("/calendar");
+  revalidatePath(`/calendar/${updated.id}`);
+  return { ok: true };
+}
+
+export async function deleteEvent(id: string) {
+  const deleted = await prisma.event.delete({ where: { id } });
+  await logAudit("event.delete", deleted.id);
   revalidatePath("/calendar");
   return { ok: true };
 }

@@ -5,8 +5,12 @@ import { DataTable } from "@/components/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { Combobox } from "@/components/ui/combobox";
 import { Modal } from "@/components/Modal";
 import { createCommunication } from "@/app/communications/actions";
+import { formatDateTime } from "@/lib/format";
+import { MobileActionBar } from "@/components/MobileActionBar";
 
 type CommunicationRow = {
   id: string;
@@ -39,7 +43,7 @@ const columns = [
   {
     accessorKey: "timestamp",
     header: "זמן",
-    cell: ({ row }: any) => new Date(row.original.timestamp).toISOString().slice(0, 16).replace("T", " "),
+    cell: ({ row }: any) => formatDateTime(row.original.timestamp),
   },
   {
     accessorKey: "type",
@@ -57,6 +61,7 @@ const columns = [
 export default function CommunicationsClient({ communications }: { communications: CommunicationRow[] }) {
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
   const [form, setForm] = React.useState({
     type: "WHATSAPP",
     summary: "",
@@ -66,11 +71,17 @@ export default function CommunicationsClient({ communications }: { communication
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
+    setError("");
     const formData = new FormData();
     formData.append("type", form.type);
     formData.append("summary", form.summary);
     formData.append("timestamp", form.timestamp);
-    await createCommunication(formData);
+    const res = await createCommunication(formData);
+    if (!res.ok) {
+      setError(res.message ?? "שגיאה בשמירת תקשורת");
+      setLoading(false);
+      return;
+    }
     setLoading(false);
     setOpen(false);
   };
@@ -89,27 +100,27 @@ export default function CommunicationsClient({ communications }: { communication
 
       <Modal open={open} onClose={() => setOpen(false)} title="רישום תקשורת">
         <form className="space-y-3" onSubmit={onSubmit}>
-          <label className="text-xs uppercase text-steel/70">
-            ערוץ
-            <select
-              className="mt-2 h-10 w-full rounded-lg border border-steel/15 bg-white/80 px-3 text-sm"
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-            >
-              <option value="CALL">שיחה</option>
-              <option value="EMAIL">אימייל</option>
-              <option value="WHATSAPP">WhatsApp</option>
-              <option value="MEETING">פגישה</option>
-            </select>
-          </label>
+          <Combobox
+            label="ערוץ"
+            items={[
+              { value: "CALL", label: "שיחה" },
+              { value: "EMAIL", label: "אימייל" },
+              { value: "WHATSAPP", label: "WhatsApp" },
+              { value: "MEETING", label: "פגישה" },
+            ]}
+            value={form.type}
+            onChange={(value) => setForm({ ...form, type: value })}
+          />
           <Input label="סיכום" value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
-          <Input label="זמן" type="datetime-local" value={form.timestamp} onChange={(e) => setForm({ ...form, timestamp: e.target.value })} />
+          <DateTimePicker label="זמן" value={form.timestamp} onChange={(value) => setForm({ ...form, timestamp: value })} />
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
           <div className="flex gap-2">
             <Button type="submit" disabled={loading}>{loading ? "שומר..." : "שמור"}</Button>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>בטל</Button>
           </div>
         </form>
       </Modal>
+      <MobileActionBar label="רישום תקשורת" onClick={() => setOpen(true)} />
     </div>
   );
 }

@@ -25,7 +25,7 @@ export function TableBody({ className, ...props }: React.HTMLAttributes<HTMLTabl
 }
 
 export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
-  return <tr className={clsx("hover:bg-sand/50", className)} {...props} />;
+  return <tr className={clsx(className)} {...props} />;
 }
 
 export function TableHeader({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {

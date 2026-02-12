@@ -120,12 +120,15 @@ async function main() {
       firmPhone: "+972-3-555-1234",
       firmEmail: "office@cohenlaw.co.il",
       invoicePrefix: "INV-",
+      invoiceNumberResetYearly: true,
       enableAllocationNumber: true,
       allocationThreshold: 5000,
       notificationRules: "תזכורת 24 שעות לפני",
       backupSchedule: "יומי 02:00",
       sessionTimeoutMinutes: 30,
       invoiceFooter: "תודה שבחרתם בנו",
+      language: "he",
+      adminEmail: "admin@lawflow.co.il",
     },
   });
 

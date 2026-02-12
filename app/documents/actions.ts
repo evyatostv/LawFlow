@@ -40,3 +40,43 @@ export async function createDocument(formData: FormData) {
   revalidatePath("/documents");
   return { ok: true };
 }
+
+const updateSchema = schema.extend({ id: z.string().min(1) });
+
+export async function updateDocument(formData: FormData) {
+  const parsed = updateSchema.safeParse({
+    id: formData.get("id"),
+    name: formData.get("name"),
+    type: formData.get("type"),
+    url: formData.get("url") || undefined,
+    clientId: formData.get("clientId") || undefined,
+    caseId: formData.get("caseId") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { ok: false, message: "נתונים לא תקינים" };
+  }
+
+  const updated = await prisma.document.update({
+    where: { id: parsed.data.id },
+    data: {
+      name: parsed.data.name,
+      type: parsed.data.type,
+      url: parsed.data.url,
+      clientId: parsed.data.clientId,
+      caseId: parsed.data.caseId,
+    },
+  });
+
+  await logAudit("document.update", updated.id);
+  revalidatePath("/documents");
+  revalidatePath(`/documents/${updated.id}`);
+  return { ok: true };
+}
+
+export async function deleteDocument(id: string) {
+  const deleted = await prisma.document.delete({ where: { id } });
+  await logAudit("document.delete", deleted.id);
+  revalidatePath("/documents");
+  return { ok: true };
+}

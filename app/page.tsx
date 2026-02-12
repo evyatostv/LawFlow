@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/SectionHeader";
 import { getClients, getEvents, getInvoices, getTasks } from "@/lib/queries";
+import { formatCurrency } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +72,7 @@ export default async function HomePage() {
             {invoices.map((invoice: any) => (
               <div key={invoice.id} className="flex items-center justify-between text-sm">
                 <span>{invoice.number}</span>
-                <span className="text-steel/70">₪{invoice.total.toLocaleString("he-IL")}</span>
+                <span className="text-steel/70">₪{formatCurrency(invoice.total)}</span>
               </div>
             ))}
           </CardContent>
@@ -88,7 +89,7 @@ export default async function HomePage() {
                   <p className="text-sm font-semibold text-ink">{client.name}</p>
                   <p className="text-xs text-steel/70">עודכן לאחרונה היום</p>
                 </div>
-                <span className="text-sm text-ink">יתרה ₪{client.balance.toLocaleString("he-IL")}</span>
+                <span className="text-sm text-ink">יתרה ₪{formatCurrency(client.balance)}</span>
               </div>
             ))}
           </div>

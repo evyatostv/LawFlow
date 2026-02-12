@@ -7,9 +7,9 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-ink text-white hover:bg-steel",
-  secondary: "bg-mint text-ink hover:bg-sand",
-  ghost: "bg-transparent text-ink hover:bg-sand",
+  primary: "bg-ink text-white",
+  secondary: "bg-mint text-ink",
+  ghost: "bg-transparent text-ink",
 };
 
 const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {
