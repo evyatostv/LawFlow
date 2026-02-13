@@ -30,7 +30,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     redirect("/login");
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email: email ?? undefined } });
   if (!user) {
     redirect("/login");
   }
