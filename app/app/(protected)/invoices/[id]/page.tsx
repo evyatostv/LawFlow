@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import InvoiceDetailClient from "./InvoiceDetailClient";
 
-export const dynamic = "force-dynamic";
 
 export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const [invoice, clients, cases, settings] = await Promise.all([

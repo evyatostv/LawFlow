@@ -2,7 +2,6 @@ import BillingClient from "./BillingClient";
 import { getInvoices, getClients, getSettings } from "@/lib/queries";
 import { getSortPreference } from "@/lib/preferences";
 
-export const dynamic = "force-dynamic";
 
 export default async function BillingPage() {
   const [invoices, clients, settings] = await Promise.all([getInvoices(), getClients(), getSettings()]);

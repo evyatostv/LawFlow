@@ -4,7 +4,6 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { getClients, getEvents, getInvoices, getTasks } from "@/lib/queries";
 import { formatCurrency } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [clients, events, invoices, tasks] = await Promise.all([

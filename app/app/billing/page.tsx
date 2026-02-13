@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { getBillingSummary, TRIAL_DAYS } from "@/lib/billing";
-import { prisma } from "@/lib/prisma";
+import { isGhPages } from "@/lib/deploy";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const dynamic = "force-dynamic";
 
 function getTrialRemaining(end: Date | null) {
   if (!end) return null;
@@ -14,6 +11,21 @@ function getTrialRemaining(end: Date | null) {
 }
 
 export default async function BillingPage({ searchParams }: { searchParams?: { reason?: string } }) {
+  if (isGhPages()) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-10">
+        <Card>
+          <h2 className="text-2xl font-semibold text-ink">חיוב ומנוי</h2>
+          <p className="mt-2 text-sm text-steel/70">עמוד זה זמין בגרסה המארחת בשרת.</p>
+        </Card>
+      </div>
+    );
+  }
+
+  const { auth } = await import("@/lib/auth");
+  const { getBillingSummary, TRIAL_DAYS } = await import("@/lib/billing");
+  const { prisma } = await import("@/lib/prisma");
+
   const session = await auth();
   const email = session?.user?.email;
 

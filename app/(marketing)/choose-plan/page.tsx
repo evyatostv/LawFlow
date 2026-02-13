@@ -1,15 +1,30 @@
-import { auth } from "@/lib/auth";
-import { getPlans } from "@/lib/plans";
-import { prisma } from "@/lib/prisma";
-import { getEntitlementForUser } from "@/lib/billing";
-import { redirect } from "next/navigation";
+import { isGhPages } from "@/lib/deploy";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import ChoosePlanClient from "./ChoosePlanClient";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export const dynamic = "force-dynamic";
 
 export default async function ChoosePlanPage() {
+  if (isGhPages()) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-semibold text-ink">בחירת תוכנית</h1>
+        <p className="text-steel/80">בחירת תוכנית זמינה בגרסה המארחת בשרת.</p>
+        <Link href="/">
+          <Button variant="ghost">חזרה לדף הבית</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const { auth } = await import("@/lib/auth");
+  const { getPlans } = await import("@/lib/plans");
+  const { prisma } = await import("@/lib/prisma");
+  const { getEntitlementForUser } = await import("@/lib/billing");
+  const { redirect } = await import("next/navigation");
+
   const session = await auth();
   const plans = await getPlans();
 
@@ -32,6 +47,8 @@ export default async function ChoosePlanPage() {
       redirect("/app");
     }
   }
+
+  const { default: ChoosePlanClient } = await import("./ChoosePlanClient");
 
   return (
     <div className="space-y-6">

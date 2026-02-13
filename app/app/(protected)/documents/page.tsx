@@ -2,7 +2,6 @@ import DocumentsClient from "./DocumentsClient";
 import { getDocuments, getClients, getCases, getTemplates, getSettings } from "@/lib/queries";
 import { getSortPreference } from "@/lib/preferences";
 
-export const dynamic = "force-dynamic";
 
 export default async function DocumentsPage() {
   const [documents, clients, cases, templates, settings] = await Promise.all([

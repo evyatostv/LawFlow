@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import EventDetailClient from "./EventDetailClient";
 
-export const dynamic = "force-dynamic";
 
 export default async function EventDetailPage({ params }: { params: { id: string } }) {
   const [event, clients, cases] = await Promise.all([

@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import DocumentDetailClient from "./DocumentDetailClient";
 
-export const dynamic = "force-dynamic";
 
 export default async function DocumentDetailPage({ params }: { params: { id: string } }) {
   const [document, clients, cases] = await Promise.all([

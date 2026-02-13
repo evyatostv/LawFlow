@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import * as React from "react";
 
-export const dynamic = "force-dynamic";
 
 const faqs = [
   {

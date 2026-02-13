@@ -2,7 +2,6 @@ import CalendarClient from "./CalendarClient";
 import { getEvents, getClients, getCases, getSettings } from "@/lib/queries";
 import { getSortPreference } from "@/lib/preferences";
 
-export const dynamic = "force-dynamic";
 
 export default async function CalendarPage() {
   const [events, clients, cases, settings] = await Promise.all([

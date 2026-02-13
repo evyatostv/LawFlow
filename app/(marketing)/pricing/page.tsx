@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { getPlans } from "@/lib/plans";
+import { planConfigs } from "@/lib/plan-config";
 import { Button } from "@/components/ui/button";
 
-export const dynamic = "force-dynamic";
-
 export default async function PricingPage() {
-  const plans = await getPlans();
+  const plans = planConfigs;
 
   return (
     <div className="space-y-10">

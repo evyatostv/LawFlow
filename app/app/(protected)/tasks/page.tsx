@@ -1,7 +1,6 @@
 import TasksClient from "./TasksClient";
 import { getTasks, getClients, getCases } from "@/lib/queries";
 
-export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
   const [tasks, clients, cases] = await Promise.all([getTasks(), getClients(), getCases()]);

@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import PrintClient from "./PrintClient";
 import { formatCurrency } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
 
 export default async function InvoicePrintPage({ params }: { params: { id: string } }) {
   const invoice = await prisma.invoice.findUnique({

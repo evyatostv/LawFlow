@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { applyTemplateVariables, buildTemplateContext } from "@/lib/templates";
 import { PrintTrigger } from "@/components/PrintTrigger";
 
-export const dynamic = "force-dynamic";
 
 export default async function TemplatePreviewPage({
   searchParams,
