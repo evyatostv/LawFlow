@@ -4,10 +4,17 @@ import { NextResponse } from "next/server";
 export default auth((req) => {
   const { nextUrl } = req;
   const isAuth = !!req.auth;
-  const isAuthRoute = nextUrl.pathname.startsWith("/auth") || nextUrl.pathname.startsWith("/api/auth");
+  const isAuthRoute =
+    nextUrl.pathname.startsWith("/auth") ||
+    nextUrl.pathname.startsWith("/login") ||
+    nextUrl.pathname.startsWith("/signup") ||
+    nextUrl.pathname.startsWith("/verify-email") ||
+    nextUrl.pathname.startsWith("/api/auth");
+  const isAppRoute = nextUrl.pathname.startsWith("/app");
+  const isChoosePlanRoute = nextUrl.pathname.startsWith("/choose-plan");
 
-  if (!isAuth && !isAuthRoute) {
-    const redirectUrl = new URL("/auth", nextUrl);
+  if (!isAuth && (isAppRoute || isChoosePlanRoute) && !isAuthRoute) {
+    const redirectUrl = new URL("/login", nextUrl);
     return NextResponse.redirect(redirectUrl);
   }
 

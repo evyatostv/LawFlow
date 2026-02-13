@@ -9,17 +9,18 @@ import { QuickAdd } from "@/components/QuickAdd";
 import clsx from "clsx";
 
 const navItems = [
-  { href: "/", label: "היום" },
-  { href: "/clients", label: "לקוחות" },
-  { href: "/cases", label: "תיקים" },
-  { href: "/tasks", label: "משימות" },
-  { href: "/calendar", label: "יומן" },
-  { href: "/documents", label: "מסמכים" },
-  { href: "/templates", label: "תבניות" },
-  { href: "/billing", label: "חיובים" },
-  { href: "/communications", label: "תקשורת" },
-  { href: "/help", label: "עזרה" },
-  { href: "/settings", label: "הגדרות" },
+  { href: "/app", label: "היום" },
+  { href: "/app/clients", label: "לקוחות" },
+  { href: "/app/cases", label: "תיקים" },
+  { href: "/app/tasks", label: "משימות" },
+  { href: "/app/calendar", label: "יומן" },
+  { href: "/app/documents", label: "מסמכים" },
+  { href: "/app/templates", label: "תבניות" },
+  { href: "/app/invoices", label: "חשבוניות" },
+  { href: "/app/billing", label: "מנוי" },
+  { href: "/app/communications", label: "תקשורת" },
+  { href: "/app/help", label: "עזרה" },
+  { href: "/app/settings", label: "הגדרות" },
 ];
 
 type Summary = { dueToday: number; unpaid: number };

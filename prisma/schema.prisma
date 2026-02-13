@@ -33,16 +33,40 @@ enum CommunicationType {
   MEETING
 }
 
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  canceled
+  expired
+}
+
+enum EntitlementStatus {
+  active
+  inactive
+}
+
+enum PaymentProvider {
+  grow
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
+  username      String?   @unique
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  passwordHash  String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
+  subscriptions Subscription[]
+  entitlements  LicenseEntitlement[]
+  paymentMethods PaymentMethod[]
+  subscriptionInvoices SubscriptionInvoice[]
+  subscriptionReceipts SubscriptionReceipt[]
 }
 
 model Account {
@@ -313,4 +337,96 @@ model AuditLog {
   actor     String
   targetId  String?
   createdAt DateTime @default(now())
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  priceCents  Int?
+  currency    String
+  interval    String
+  features    String[]
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                    String             @id @default(cuid())
+  userId                String
+  planId                String
+  status                SubscriptionStatus
+  trialStartAt          DateTime?
+  trialEndAt            DateTime?
+  currentPeriodStartAt  DateTime?
+  currentPeriodEndAt    DateTime?
+  nextChargeAt          DateTime?
+  provider              PaymentProvider
+  providerCustomerId    String?
+  providerSubscriptionId String?
+  lastChargeAt          DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                  Plan      @relation(fields: [planId], references: [id])
+  entitlements          LicenseEntitlement[]
+  invoices              SubscriptionInvoice[]
+}
+
+model LicenseEntitlement {
+  id             String            @id @default(cuid())
+  userId         String
+  subscriptionId String
+  status         EntitlementStatus
+  expiresAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+}
+
+model PaymentMethod {
+  id        String   @id @default(cuid())
+  userId    String
+  provider  PaymentProvider
+  type      String
+  last4     String?
+  expMonth  Int?
+  expYear   Int?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SubscriptionInvoice {
+  id             String   @id @default(cuid())
+  userId         String
+  subscriptionId String
+  amountCents    Int
+  currency       String
+  status         PaymentStatus
+  issuedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  receipts       SubscriptionReceipt[]
+}
+
+model SubscriptionReceipt {
+  id           String   @id @default(cuid())
+  userId       String
+  invoiceId    String
+  amountCents  Int
+  currency     String
+  issuedAt     DateTime @default(now())
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoice      SubscriptionInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 }
