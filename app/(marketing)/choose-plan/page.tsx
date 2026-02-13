@@ -1,9 +1,6 @@
 import { isGhPages } from "@/lib/deploy";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import ChoosePlanClient from "./ChoosePlanClient";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 
 export default async function ChoosePlanPage() {
