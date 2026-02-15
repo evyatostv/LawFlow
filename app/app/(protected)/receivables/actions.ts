@@ -154,7 +154,7 @@ export async function updateInvoice(formData: FormData) {
 
   await logAudit("invoice.update", updated.id);
   revalidatePath("/app/receivables");
-  revalidatePath(`/invoices/${updated.id}`);
+  revalidatePath(`/app/invoices/${updated.id}`);
   return { ok: true };
 }
 

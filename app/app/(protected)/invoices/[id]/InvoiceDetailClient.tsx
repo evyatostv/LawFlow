@@ -89,7 +89,7 @@ export default function InvoiceDetailClient({
           <h2 className="text-2xl font-semibold text-ink">חשבונית {invoice.number}</h2>
           <p className="text-sm text-steel/70">עריכה והפקת PDF</p>
         </div>
-        <Button variant="secondary" onClick={() => window.open(`/invoices/${invoice.id}/print`, "_blank")}>
+        <Button variant="secondary" onClick={() => window.open(`/app/invoices/${invoice.id}/print`, "_blank")}>
           פתיחת PDF
         </Button>
       </div>

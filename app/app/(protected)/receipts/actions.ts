@@ -86,6 +86,6 @@ export async function createReceipt(formData: FormData) {
 
   await logAudit("receipt.create", receipt.id);
   revalidatePath("/app/receivables");
-  revalidatePath(`/invoices/${invoice.id}/print`);
+  revalidatePath(`/app/invoices/${invoice.id}/print`);
   return { ok: true, receiptId: receipt.id };
 }

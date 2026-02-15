@@ -1,7 +1,7 @@
 import { isGhPages } from "@/lib/deploy";
 
 export default async function LoginPage() {
-  if (isGhPages()) {
+  if (isGhPages() || !process.env.DATABASE_URL) {
     const { default: LoginStatic } = await import("./LoginStatic");
     return <LoginStatic />;
   }

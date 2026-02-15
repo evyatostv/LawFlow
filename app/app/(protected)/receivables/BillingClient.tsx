@@ -163,7 +163,7 @@ export default function BillingClient({
     setLoading(false);
     setReceiptOpen(false);
     if (res.receiptId) {
-      window.open(`/receipts/${res.receiptId}/print`, "_blank");
+      window.open(`/app/receipts/${res.receiptId}/print`, "_blank");
     }
   };
 
@@ -221,7 +221,7 @@ export default function BillingClient({
             size="sm"
             variant="secondary"
             disabled={invoices.length === 0}
-            onClick={() => window.open(`/invoices/${invoices[0].id}/print`, "_blank")}
+            onClick={() => window.open(`/app/invoices/${invoices[0].id}/print`, "_blank")}
           >
             תצוגת PDF
           </Button>

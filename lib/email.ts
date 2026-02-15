@@ -34,6 +34,11 @@ export async function sendOtpEmail(to: string, code: string) {
     return;
   }
 
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`[email] No provider configured. OTP for ${to}: ${code}`);
+    return;
+  }
+
   throw new Error("No email provider configured");
 }
 
@@ -70,6 +75,11 @@ export async function sendVerificationEmail(to: string, link: string) {
         content: [{ type: "text/plain", value: body }],
       }),
     });
+    return;
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`[email] No provider configured. Verification link for ${to}: ${link}`);
     return;
   }
 
